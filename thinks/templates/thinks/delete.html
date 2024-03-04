@@ -1,0 +1,15 @@
+{% extends "thinks/base.html" %}
+
+{% block header %}
+<h1>Delete {{think.slug}}</h1>
+{% endblock header %}
+
+{% block main %}
+
+<form method="post" >
+    {{form}}
+    {% csrf_token %}
+    <button type="submit">Delete</button>
+</form>
+
+{% endblock main %}

@@ -1,0 +1,15 @@
+{% extends "thinks/base.html" %}
+
+{% block header %}
+<h1>Remix {{think.slug}}</h1>
+{% endblock header %}
+
+{% block main %}
+
+<form method="post" >
+    {{form}}
+    {% csrf_token %}
+    <button type="submit">Remix</button>
+</form>
+
+{% endblock main %}

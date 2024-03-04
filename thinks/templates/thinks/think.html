@@ -1,0 +1,106 @@
+{% extends "thinks/base.html" %}
+
+{% block body_class %}thing-editor {{block.super}}{% endblock %} 
+
+{% block header %}
+<a href="/">thinks</a>
+<h1>{{think.slug}}</h1>
+<a href="{% url 'rename_think' slug=think.slug %}">Rename</a>
+<a href="{% url 'delete_think' slug=think.slug %}">Delete</a>
+<a href="{% url 'remix_think' slug=think.slug %}">Remix</a>
+{% endblock header %}
+
+{% block main %}
+
+<nav>
+    <a target="preview" href="{{think.get_static_url}}">Preview</a>
+
+    <ul id="file-tree">
+        {% for name, path in files %}
+        <li><a href="?path={{path}}">{{name}}</a></li>
+        {% endfor %}
+    </ul>
+
+    <form id="new-file-form" method="post" action="{% url 'save_file' slug=think.slug %}" enctype="multipart/form-data">
+        <input aria-labelledby="new-file-button" id="new_file_path" type="text" name="path">
+        <button id="new-file-button" type="submit">New file</button>
+        {% csrf_token %}
+    </form>
+
+    <form method="post" action="{% url 'run_command' slug=think.slug %}">
+        <input aria-labelledby="run-command-button" name="command">
+        {% csrf_token %}
+        <button id="run-command-button" type="submit">Run</button>
+    </form>
+</nav>
+
+<section id="editor">
+    {% if path is not None and not path.is_dir %}
+    <nav id="editor-controls">
+        {{path}}
+        <details>
+            <summary>actions</summary>
+            <form method="post" action="{% url 'delete_file' slug=think.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="path" value="{{path}}">
+                <button type="submit">Delete</button>
+            </form>
+            <form method="post" action="{% url 'rename_file' slug=think.slug %}">
+                {% csrf_token %}
+                <input type="hidden" name="path" value="{{path}}">
+                <input type="text" name="newpath" value="{{path}}">
+                <button type="submit">Rename</button>
+            </form>
+        </details>
+    </nav>
+    <form id="file-form" method="post" action="{% url 'save_file' slug=think.slug %}" enctype="multipart/form-data">
+        {{file_form.path.as_hidden}}
+        {{file_form.content.as_hidden}}
+        <code-editor id="code-editor">{{content}}</code-editor>
+        {% csrf_token %}
+    </form>
+    {% endif %}
+</section>
+
+<section id="preview">
+    <button type="button" id="reload-preview">Reload</button>
+    <iframe id="preview-frame" src="{{think.get_static_url}}"></iframe>
+</section>
+
+<script>
+    const file_form = document.getElementById('file-form');
+    const preview_frame = document.getElementById('preview-frame');
+    const content_input = document.getElementById('code-editor');
+
+    function debounce(fn) {
+        let last = null;
+        return function() {
+            if(last) {
+                clearTimeout(last);
+            }
+            last = setTimeout(fn, 2000);
+        }
+    }
+
+    function reload_preview() {
+        preview_frame.src = preview_frame.src;
+    }
+
+    if(content_input) {
+        const save_content = debounce(async() => {
+            const value = content_input.value;
+            console.log('save', value);
+            file_form.querySelector('[name="content"]').value = value;
+            await fetch(file_form.action, {method: 'POST', body: new FormData(file_form)});
+            reload_preview();
+        });
+        content_input.addEventListener('change', save_content);
+    }
+    console.log('hey');
+
+    document.getElementById('reload-preview').addEventListener('click', () => {
+        reload_preview();
+    })
+</script>
+
+{% endblock main %}

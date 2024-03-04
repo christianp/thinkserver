@@ -1,0 +1,28 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>{% block title %}Thinks{% endblock %}</title>
+
+        {% block stylesheets %}
+        <link rel="stylesheet" href="{% static "thinks/thinks.css" %}">
+        {% endblock stylesheets %}
+
+        {% block scripts %}
+        <script type="module" src="{% static "thinks/code-editor.mjs" %}"></script>
+        {% endblock scripts %}
+    </head>
+    <body class="{% block body_class %}{% endblock %}">
+        {% block body %}
+        <header>
+            {% block header %}{% endblock %}
+        </header>
+        <main>
+            {% block main %}{% endblock %}
+        </main>
+        {% endblock body %}
+    </body>
+</html>

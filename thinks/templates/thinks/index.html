@@ -1,0 +1,24 @@
+{% extends "thinks/base.html" %}
+
+{% block body_class %}index{% endblock %}
+
+{% block header %}
+<h1>Thinks</h1>
+{% endblock header %}
+
+{% block main %}
+    <ul id="thinks-list">
+        {% for think in object_list %}
+        <li class="think">
+            <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
+            {% with readme=think.get_readme %}
+            {% if readme %}
+            <pre class="readme">{{readme}}
+            </pre>
+            {% endif %}
+            {% endwith %}
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'new_think' %}">New think</a>
+{% endblock main %}
