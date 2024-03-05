@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views import generic
@@ -11,7 +12,7 @@ from . import forms
 from .models import Think
 from .random_slug import random_slug
 
-class ThinkMixin:
+class ThinkMixin(LoginRequiredMixin):
     model = Think
     context_object_name = 'think'
 

@@ -1,5 +1,6 @@
 :root {
     --spacing: 1em;
+    --half-spacing: calc(0.5 * var(--spacing));
 }
 
 * {
@@ -20,7 +21,7 @@ body.index {
         display: flex;
         flex-direction: column;
         gap: var(--spacing);
-        
+
         & > .think {
             & .readme {
                 max-width: 80ch;
@@ -41,23 +42,23 @@ body.thing-editor {
     ;
     gap: var(--spacing);
     /*! overflow: hidden; */
-    
+
     & main {
         display: grid;
         gap: var(--spacing);
         grid-template: "nav editor preview" / auto 3fr 2fr;
         height: 100%;
-        
+
         & > nav {
             display: flex;
             flex-direction: column;
             gap: var(--spacing);
-            
+
             & #file-tree {
                 margin: 0;
                 overflow: auto;
             }
-            
+
             & form {
                 display: grid;
                 grid-template-columns: 1fr 6em;
@@ -65,20 +66,32 @@ body.thing-editor {
                 align-items: start;
             }
         }
-        
+
         & #editor {
             & #editor-controls {
                 display: flex;
                 gap: var(--spacing);
                 justify-content: space-between;
+
+                & > details {
+                    text-align: right;
+
+                    & > summary {
+                        user-select: none;
+                    }
+
+                    & button {
+                        margin: var(--half-spacing) 0;
+                    }
+                }
             }
 
             & #code-editor {
                 display: block;
                 max-width: 50vw;
-            }            
+            }
         }
-        
+
         & #preview {
             display: flex;
             flex-direction: column;
@@ -90,7 +103,7 @@ body.thing-editor {
         }
     }
 }
-    
+
 #file-form {
     overflow: auto;
     /*! max-height: 100%; */
@@ -104,13 +117,13 @@ body.thing-editor {
         & main {
             grid-template:
                 "nav" min-content "editor" 40vh "preview";
-            
+
             & nav {
                 flex-direction: row;
                 flex-wrap: wrap;
                 & form {
                     flex-grow: 1;
-                    
+
                 }
             }
         }
