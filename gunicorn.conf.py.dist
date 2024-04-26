@@ -1,0 +1,6 @@
+bind = "unix:/run/think_something.sock"
+workers = 1
+accesslog = "/var/log/gunicorn/think.somethingorotherwhatever.com.access.log"
+errorlog = "/var/log/gunicorn/think.somethingorotherwhatever.com.error.log"
+capture_output = True
+loglevel = "info"
