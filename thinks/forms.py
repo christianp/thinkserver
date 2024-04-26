@@ -23,7 +23,10 @@ class RemixThinkForm(forms.ModelForm):
 class RenameThinkForm(forms.ModelForm):
     class Meta:
         model = Think
-        fields = ['slug']
+        fields = ['slug', 'category', 'is_template']
+        widgets = {
+            'category': forms.TextInput(attrs={'list': 'categories'})
+        }
 
     def __init__(self, *args, instance=None, **kwargs):
         self.original_root = None if instance is None else instance.root

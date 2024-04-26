@@ -8,7 +8,7 @@
         <title>{% block title %}Thinks{% endblock %}</title>
 
         {% block stylesheets %}
-        <link rel="stylesheet" href="{% static "thinks/thinks.css" %}">
+        <link rel="stylesheet" href="{% static "thinks/thinks.css" %}?{% now "U" %}">
         {% endblock stylesheets %}
 
         {% block scripts %}

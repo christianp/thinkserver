@@ -1,0 +1,31 @@
+{% extends "thinks/base.html" %}
+
+{% block body_class %}login {{block.super}}{% endblock %}
+
+{% block header %}
+<h1>Login</h1>
+{% endblock %}
+
+{% block main %}
+
+{% if form.errors %}
+<p>Your username and password didn't match. Please try again.</p>
+{% endif %}
+
+{% if next %}
+    {% if user.is_authenticated %}
+    <p>Your account doesn't have access to this page. To proceed,
+    please login with an account that has access.</p>
+    {% else %}
+    <p>Please login to see this page.</p>
+    {% endif %}
+{% endif %}
+
+<form method="post" action="{% url 'login' %}">
+{% csrf_token %}
+{{form}}
+<button type="submit">Log in</button>
+<input type="hidden" name="next" value="{{ next }}">
+</form>
+
+{% endblock %}

@@ -20,7 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s8dq=40yx#rhlq@j$#i3^naz9&yx6tut#ikr80uu!r(1ze@3#@'
+with open('/srv/think.somethingorotherwhatever.com/secret_key.txt') as f:
+    SECRET_KEY = f.read()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -127,4 +128,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 THINKS_DIR = Path('think_data')
 THINKS_DIR.mkdir(parents=True, exist_ok=True)
 
-THINKS_STATIC_URL = 'http://{slug}.think.somethingorotherwhatever.com'
+THINKS_STATIC_URL = 'https://{slug}.think.somethingorotherwhatever.com'

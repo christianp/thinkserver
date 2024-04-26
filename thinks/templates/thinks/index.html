@@ -7,18 +7,45 @@
 {% endblock header %}
 
 {% block main %}
-    <ul id="thinks-list">
-        {% for think in object_list %}
-        <li class="think">
-            <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
-            {% with readme=think.get_readme %}
-            {% if readme %}
-            <pre class="readme">{{readme}}
-            </pre>
-            {% endif %}
-            {% endwith %}
-        </li>
-        {% endfor %}
-    </ul>
-    <a href="{% url 'new_think' %}">New think</a>
+    <section id="templates">
+        <h2>Templates</h2>
+        <ul id="templates-list">
+            {% for think in templates %}
+            <li class="think">
+                <a class="remix" href="{% url 'remix_think' think.slug %}">{{think.slug}}</a>
+                <br>
+                <small>(<a href="{% url 'think' think.slug %}">edit</a>)</small>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section id="thinks">
+        <h2>Thinks</h2>
+        <p><a href="{% url 'new_think' %}">New think</a></p>
+            {% regroup thinks by category as categories %}
+            <ul id="thinks-list">
+                {% for category in categories %}
+                <li>
+                <details {% if not category.grouper %}open{% endif %}>
+                    <summary>{% if category.grouper %}{{category.grouper}}{% else %}Uncategorised{% endif %}</summary>
+                        <ul>
+                        {% for think in category.list %}
+                        <li class="think">
+                            <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
+                            <time datetime="{{think.creation_time|date:"c"}}">{{think.creation_time}}</time>
+                            {% with readme=think.get_readme %}
+                            {% if readme %}
+                            <pre class="readme">{{readme|safe}}</pre>
+                            {% endif %}
+                            {% endwith %}
+                        </li>
+                        {% endfor %}
+                        </ul>
+                </details>
+                </li>
+                {% endfor %}
+            </ul>
+        </dl>
+    </section>
 {% endblock main %}

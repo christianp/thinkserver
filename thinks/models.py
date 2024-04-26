@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
+from django.utils.timezone import datetime, make_aware
 
 THINKS_DIR = settings.THINKS_DIR
 
@@ -8,6 +9,9 @@ THINKS_DIR = settings.THINKS_DIR
 class Think(models.Model):
 
     slug = models.SlugField()
+    category = models.CharField(max_length=100, blank=True, null=True)
+
+    is_template = models.BooleanField(default=False)
 
     class Meta:
         ordering = ('slug',)
@@ -43,3 +47,17 @@ class Think(models.Model):
                     return f.read()
 
         return None
+
+    def get_log(self):
+        log_file = self.file_path('.make.log')
+        if not log_file.exists():
+            return ''
+        
+        with open(log_file) as f:
+            log = f.read()
+
+        return log
+
+    @property
+    def creation_time(self):
+        return make_aware(datetime.fromtimestamp(self.root.stat().st_ctime))

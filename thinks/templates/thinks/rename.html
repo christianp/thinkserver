@@ -8,6 +8,11 @@
 
 <form method="post" >
     {{form}}
+    <datalist id="categories">
+        {% for category in categories %}
+        <option value="{{category}}"></option>
+        {% endfor %}
+    </datalist>
     {% csrf_token %}
     <button type="submit">Rename</button>
 </form>

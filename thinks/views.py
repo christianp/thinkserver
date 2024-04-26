@@ -4,8 +4,10 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.urls import reverse
+from itertools import groupby
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 
 from . import forms
@@ -18,6 +20,15 @@ class ThinkMixin(LoginRequiredMixin):
 
 class IndexView(ThinkMixin, generic.ListView):
     template_name = 'thinks/index.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['templates'] = Think.objects.filter(is_template=True)
+
+        context['thinks'] = sorted(Think.objects.filter(is_template=False), key=lambda t: (t.category if t.category else '', -t.creation_time.timestamp()))
+
+        return context
 
 class CreateThinkView(ThinkMixin, generic.CreateView):
     template_name = 'thinks/new.html'
@@ -49,34 +60,31 @@ class RemixThinkView(ThinkMixin, generic.UpdateView):
 
 
 class ThinkView(ThinkMixin, generic.DetailView):
-    template_name = 'thinks/think.html'
+    template_name = "thinks/think.html"
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
         think = self.object
 
+        root = think.root
+
         strpath = self.request.GET.get('path')
 
         path = think.file_path(strpath)
 
-        relpath = path.relative_to(think.root) if path is not None else None
+        relpath = path.relative_to(root) if path is not None else None
 
         if path is None:
-            directory = think.root
+            directory = root
         elif path.is_dir():
             directory = path
         else:
             directory = path.parent
 
-        files = [(p.name, p.relative_to(think.root)) for p in directory.iterdir()]
-        if directory != think.root:
-            files.insert(0, ('..', directory.parent.relative_to(think.root)))
-        context['files'] = files
-
-        context['directory'] = directory
-
-        context['path'] = relpath
+        files = [{'name': p.name, 'path': str(p.relative_to(root)), 'is_dir': p.is_dir()} for p in directory.iterdir()]
+        if directory != root:
+            files.insert(0, {'name': '..', 'path': str(directory.parent.relative_to(root)), 'is_dir': True})
 
         if path is not None and path.is_file():
             with open(path) as f:
@@ -84,9 +92,15 @@ class ThinkView(ThinkMixin, generic.DetailView):
         else:
             content = ''
 
-        context['content'] = content
-
-        context['file_form'] = forms.SaveFileForm(instance=think, initial={'content': content, 'path': relpath})
+        context['think_editor_data'] = {
+            'preview_url': think.get_static_url(),
+            'slug': think.slug,
+            'files': files,
+            'file_path': str(relpath),
+            'file_content': content,
+            'is_dir': path is None or path.is_dir(),
+            'no_preview': self.request.GET.get('no-preview') is not None,
+        }
 
         return context
 
@@ -96,6 +110,13 @@ class RenameThinkView(ThinkMixin, generic.UpdateView):
 
     def get_success_url(self):
         return self.object.get_absolute_url()
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['categories'] = sorted(Think.objects.exclude(category=None).order_by('category').values_list('category',flat=True).distinct())
+
+        return context
 
 class DeleteThinkView(ThinkMixin, generic.DeleteView):
     template_name = 'thinks/delete.html'
@@ -152,9 +173,17 @@ class RunCommandView(ThinkMixin, generic.UpdateView):
         think = self.object
         command = form.cleaned_data['command']
         res = subprocess.run(
-            command.split(' '),
+            ['bash','-c',command],
             cwd=think.root,
             encoding='utf8',
             capture_output=True
         )
         return JsonResponse({'stdout': res.stdout, 'stderr': res.stderr})
+
+class LogView(ThinkMixin, generic.DetailView):
+    template_name = 'thinks/think.html'
+
+    def get(self, *args, **kwargs):
+        think = self.get_object()
+
+        return HttpResponse(think.get_log(), content_type='text/plain; charset=utf-8')

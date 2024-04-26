@@ -1,0 +1,6 @@
+__pycache__
+db.sqlite3
+gunicorn.conf.py
+public/
+secret_key.txt
+think_data/

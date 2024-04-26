@@ -1,31 +1,64 @@
 :root {
     --spacing: 1em;
     --half-spacing: calc(0.5 * var(--spacing));
+    --double-spacing: calc(2 * var(--spacing));
 }
 
 * {
     box-sizing: border-box;
 }
 
-body > header {
-    padding: var(--spacing);
-    & h1 {
-        margin: 0;
+body {
+    font-family: sans-serif;
+    & > header {
+        padding: var(--spacing);
+        & h1 {
+            margin: 0;
+        }
     }
 }
 
 body.index {
-    & #thinks-list {
-        padding: 0;
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing);
+    font-size: 20px;
 
-        & > .think {
-            & .readme {
-                max-width: 80ch;
-                white-space: pre-wrap;
+    & main {
+        padding: 0 var(--spacing);
+
+        & #templates-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--double-spacing);
+        }
+
+        & #thinks-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--double-spacing);
+            list-style: none;
+            padding: 0;
+            
+            & details {
+                &[open] > summary {
+                    margin-bottom: var(--spacing);
+                }
+                & ul {
+                    display: flex;
+                    flex-direction: column;
+                    gap: var(--spacing);
+                }
+            }
+
+            & .think {
+                & time {
+                    font-size: smaller;
+                }
+                
+                & .readme {
+                    max-width: 80ch;
+                    white-space: pre-wrap;
+                }
             }
         }
     }
@@ -57,6 +90,19 @@ body.thing-editor {
             & #file-tree {
                 margin: 0;
                 overflow: auto;
+                flex-grow: 1;
+
+                & > li {
+                    margin-top: var(--half-spacing);
+                }
+
+                & .dir {
+                    font-weight: bold;
+                }
+
+                & .dir + .file {
+                    margin-top: var(--spacing);
+                }
             }
 
             & form {
@@ -64,6 +110,13 @@ body.thing-editor {
                 grid-template-columns: 1fr 6em;
                 align-content: start;
                 align-items: start;
+            }
+
+            & #make-log {
+                & > pre {
+                    max-width: 20em;
+                    overflow: auto;
+                }
             }
         }
 
@@ -89,7 +142,9 @@ body.thing-editor {
             & #code-editor {
                 display: block;
                 max-width: 50vw;
+                padding-bottom: 10em;
             }
+    overflow: hidden;
         }
 
         & #preview {
@@ -101,12 +156,13 @@ body.thing-editor {
                 border: none;
             }
         }
+        overflow: hidden;
     }
 }
 
 #file-form {
     overflow: auto;
-    /*! max-height: 100%; */
+    max-height: 100%;
     max-width: 100%;
 }
 @media (max-width: 100ch) {
@@ -116,17 +172,33 @@ body.thing-editor {
     body.thing-editor {
         & main {
             grid-template:
-                "nav" min-content "editor" 40vh "preview";
+                "nav" min-content "editor" 40vh "preview"
+            ;
+            overflow: visible;
 
             & nav {
                 flex-direction: row;
                 flex-wrap: wrap;
+
                 & form {
                     flex-grow: 1;
-
                 }
+
+                & #file-tree {
+                    max-height: 7em;
+                }
+            }
+
+            & #editor {
+                overflow: auto;
+                & #code-editor {
+                    max-width: none;
+                }
+            }
+
+            & #preview {
+                height: 100vh;
             }
         }
     }
 }
-

@@ -104,6 +104,7 @@ class MakeHandler(FileSystemEventHandler):
             command = ['make'] + config.get('default_make', [])
             res = subprocess.run(command, cwd=d, capture_output=True, encoding='utf-8')
             with open(d / '.make.log', 'w') as f:
+                f.write(f"{datetime.now()}\n")
                 f.write(res.stdout)
                 f.write(res.stderr)
         else:
