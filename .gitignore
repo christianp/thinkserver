@@ -4,3 +4,4 @@ gunicorn.conf.py
 public/
 secret_key.txt
 think_data/
+Makefile

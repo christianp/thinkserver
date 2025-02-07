@@ -11,6 +11,7 @@
 }
 
 body {
+    color-scheme: light dark;
     font-family: sans-serif;
     
     display: grid;
@@ -26,6 +27,13 @@ body {
         }
     }
 
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: black;
+    color: white;
+  }
 }
 
 header {
@@ -46,9 +54,37 @@ header {
 
 
 .think-editor {
-    display: flex;
+    display: grid;
     gap: var(--spacing);
     height: 100%;
+    overflow: hidden;
+    --col-1-width: auto;
+    grid-template: 
+        "nav editor preview" min-content 
+        "log editor preview" 1fr
+        / var(--col-1-width) var(--editor-size) var(--preview-size)
+    ;
+    
+    &:has(#main-nav[open], #log[open]) {
+        --col-1-width: 20em;
+    }
+    
+    & > #main-nav {
+        grid-area: nav;
+    }
+    & > #log {
+        grid-area: log;
+        width: 100%;
+        overflow: auto;
+    }
+
+    & .dragging {
+      background: red;
+    }
+
+    & summary {
+      background: #eee;
+    }
     
     & > #main-nav > nav {
         display: flex;
@@ -92,16 +128,12 @@ header {
         }
     }
 
-    & #log[open] {
-      width: 80ch;
-      overflow: auto;
-    }
-
     & #editor {
         overflow: hidden;
         flex-grow: 1;
         flex-basis: var(--editor-size);
         max-height: 85vh;
+        grid-area: editor;
         
         & #editor-controls {
             display: flex;
@@ -131,6 +163,7 @@ header {
     & #preview {
         display: flex;
         flex-direction: column;
+        grid-area: preview;
 
         &[open] {
           flex-grow: 1;
@@ -144,7 +177,7 @@ header {
         
         & > iframe {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 3em);
             border: none;
         }
         
@@ -152,7 +185,6 @@ header {
             display: none;
         }
     }
-    overflow: hidden;
 }
 
 #file-form {
@@ -165,13 +197,17 @@ header {
         font-size: min(3vw, 16px);
     }
     .think-editor {
-        flex-direction: column;
         overflow: visible;
+        grid-template:
+          "nav"
+          "log"
+          "editor"
+          "preview"
+        ;
 
         & > * ~ * {
             border-top: medium solid #888;
             margin-top: var(--spacing);
-            padding-top: var(--spacing);
         }
 
         & nav {

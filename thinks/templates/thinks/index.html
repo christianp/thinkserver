@@ -20,14 +20,32 @@
         </ul>
     </section>
 
+    <section id="recent">
+        <h2>Recent</h2>
+
+        <ul class="thinks-list">
+            {% for think in recent_thinks %}
+            <li class="think">
+                <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
+                <time datetime="{{think.creation_time|date:"c"}}">{{think.creation_time}}</time>
+                {% with readme=think.get_readme %}
+                {% if readme %}
+                <pre class="readme">{{readme|safe}}</pre>
+                {% endif %}
+                {% endwith %}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
     <section id="thinks">
         <h2>Thinks</h2>
         <p><a href="{% url 'new_think' %}">New think</a></p>
             {% regroup thinks by category as categories %}
-            <ul id="thinks-list">
+            <ul class="thinks-list">
                 {% for category in categories %}
                 <li>
-                <details {% if not category.grouper %}open{% endif %}>
+                <details open>
                     <summary>{% if category.grouper %}{{category.grouper}}{% else %}Uncategorised{% endif %}</summary>
                         <ul>
                         {% for think in category.list %}

@@ -1,18 +1,29 @@
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import AccessMixin
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.urls import reverse
 from itertools import groupby
+import json
 from pathlib import Path
 import shutil
 import shlex
 import subprocess
 
 from . import forms
+from .make import ThingMaker
 from .models import Think
 from .random_slug import random_slug
+
+class LoginRequiredMixin(AccessMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            token = request.META.get('HTTP_AUTHORIZATION')
+            if token != f'Bearer {settings.API_TOKEN}':
+                return self.handle_no_permission()
+
+        return super().dispatch(request, *args, **kwargs)
 
 class ThinkMixin(LoginRequiredMixin):
     model = Think
@@ -26,9 +37,18 @@ class IndexView(ThinkMixin, generic.ListView):
 
         context['templates'] = Think.objects.filter(is_template=True)
 
+        context['recent_thinks'] = Think.objects.filter(is_template=False).order_by('-creation_time')[:3]
+
         context['thinks'] = sorted(Think.objects.filter(is_template=False), key=lambda t: (t.category if t.category else '', -t.creation_time.timestamp()))
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        if request.accepts('application/json') and not request.accepts('text/html'):
+            self.object_list = self.get_queryset()
+            context = self.get_context_data()
+            return JsonResponse({'templates': [t.as_json() for t in context['templates']], 'thinks': [t.as_json() for t in context['thinks']]})
+        return super().get(request, *args, **kwargs)
 
 class CreateThinkView(ThinkMixin, generic.CreateView):
     template_name = 'thinks/new.html'
@@ -82,9 +102,15 @@ class ThinkView(ThinkMixin, generic.DetailView):
         else:
             directory = path.parent
 
-        files = [{'name': p.name, 'path': str(p.relative_to(root)), 'is_dir': p.is_dir()} for p in directory.iterdir()]
+        if directory.exists():
+            files = [{'name': p.name, 'path': str(p.relative_to(root)), 'is_dir': p.is_dir()} for p in directory.iterdir()]
+        else:
+            files = []
+
         if directory != root:
             files.insert(0, {'name': '..', 'path': str(directory.parent.relative_to(root)), 'is_dir': True})
+
+        files = sorted(files, key=lambda x: x['name'].lower())
 
         if path is not None and path.is_file():
             with open(path) as f:
@@ -92,7 +118,7 @@ class ThinkView(ThinkMixin, generic.DetailView):
         else:
             content = ''
 
-        context['think_editor_data'] = {
+        data = context['think_editor_data'] = {
             'preview_url': think.get_static_url(),
             'slug': think.slug,
             'files': files,
@@ -101,6 +127,10 @@ class ThinkView(ThinkMixin, generic.DetailView):
             'is_dir': path is None or path.is_dir(),
             'no_preview': self.request.GET.get('no-preview') is not None,
         }
+
+        if path is not None and path.suffix == '.elm':
+            with open('public/elm-packages.json') as f:
+                data['elm_packages'] = json.load(f)
 
         return context
 
@@ -138,7 +168,13 @@ class SaveFileView(ThinkMixin, generic.UpdateView):
 
     def form_valid(self, form):
         self.path = form.cleaned_data['path'].relative_to(self.object.root)
-        return super().form_valid(form)
+
+        thing = form.save()
+
+        maker = ThingMaker(thing)
+        result = maker.make(self.path)
+
+        return JsonResponse(result or {"error": "not built"})
 
     def get_success_url(self):
         return self.object.get_absolute_url()+'?path='+str(self.path)

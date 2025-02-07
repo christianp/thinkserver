@@ -68,7 +68,7 @@ class SaveFileForm(forms.ModelForm):
             path.parent.mkdir(exist_ok=True, parents=True)
 
         with open(path, 'w') as f:
-            f.write(content)
+            f.write(content.replace('\r\n','\n'))
 
         return super().save(commit)
 

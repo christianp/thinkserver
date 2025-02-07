@@ -4562,7 +4562,185 @@ function _Url_percentDecode(string)
 	{
 		return $elm$core$Maybe$Nothing;
 	}
-}var $elm$core$Basics$EQ = {$: 'EQ'};
+}
+
+
+// DECODER
+
+var _File_decoder = _Json_decodePrim(function(value) {
+	// NOTE: checks if `File` exists in case this is run on node
+	return (typeof File !== 'undefined' && value instanceof File)
+		? $elm$core$Result$Ok(value)
+		: _Json_expecting('a FILE', value);
+});
+
+
+// METADATA
+
+function _File_name(file) { return file.name; }
+function _File_mime(file) { return file.type; }
+function _File_size(file) { return file.size; }
+
+function _File_lastModified(file)
+{
+	return $elm$time$Time$millisToPosix(file.lastModified);
+}
+
+
+// DOWNLOAD
+
+var _File_downloadNode;
+
+function _File_getDownloadNode()
+{
+	return _File_downloadNode || (_File_downloadNode = document.createElement('a'));
+}
+
+var _File_download = F3(function(name, mime, content)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var blob = new Blob([content], {type: mime});
+
+		// for IE10+
+		if (navigator.msSaveOrOpenBlob)
+		{
+			navigator.msSaveOrOpenBlob(blob, name);
+			return;
+		}
+
+		// for HTML5
+		var node = _File_getDownloadNode();
+		var objectUrl = URL.createObjectURL(blob);
+		node.href = objectUrl;
+		node.download = name;
+		_File_click(node);
+		URL.revokeObjectURL(objectUrl);
+	});
+});
+
+function _File_downloadUrl(href)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var node = _File_getDownloadNode();
+		node.href = href;
+		node.download = '';
+		node.origin === location.origin || (node.target = '_blank');
+		_File_click(node);
+	});
+}
+
+
+// IE COMPATIBILITY
+
+function _File_makeBytesSafeForInternetExplorer(bytes)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/10
+	// all other browsers can just run `new Blob([bytes])` directly with no problem
+	//
+	return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+
+function _File_click(node)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/11
+	// all other browsers have MouseEvent and do not need this conditional stuff
+	//
+	if (typeof MouseEvent === 'function')
+	{
+		node.dispatchEvent(new MouseEvent('click'));
+	}
+	else
+	{
+		var event = document.createEvent('MouseEvents');
+		event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		document.body.appendChild(node);
+		node.dispatchEvent(event);
+		document.body.removeChild(node);
+	}
+}
+
+
+// UPLOAD
+
+var _File_node;
+
+function _File_uploadOne(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			callback(_Scheduler_succeed(event.target.files[0]));
+		});
+		_File_click(_File_node);
+	});
+}
+
+function _File_uploadOneOrMore(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.multiple = true;
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			var elmFiles = _List_fromArray(event.target.files);
+			callback(_Scheduler_succeed(_Utils_Tuple2(elmFiles.a, elmFiles.b)));
+		});
+		_File_click(_File_node);
+	});
+}
+
+
+// CONTENT
+
+function _File_toString(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsText(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toBytes(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(new DataView(reader.result)));
+		});
+		reader.readAsArrayBuffer(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toUrl(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsDataURL(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+var $elm$core$Basics$EQ = {$: 'EQ'};
 var $elm$core$Basics$GT = {$: 'GT'};
 var $elm$core$Basics$LT = {$: 'LT'};
 var $elm$core$List$cons = _List_cons;
@@ -5351,29 +5529,75 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$document = _Browser_document;
+var $author$project$App$Model = function (show_preview) {
+	return function (show_log) {
+		return function (editor_size) {
+			return function (content_changed) {
+				return function (log) {
+					return function (command_to_run) {
+						return function (selected_package) {
+							return function (csrf_token) {
+								return function (preview_url) {
+									return function (slug) {
+										return function (files) {
+											return function (file_path) {
+												return function (file_content) {
+													return function (is_dir) {
+														return function (elm_packages) {
+															return {command_to_run: command_to_run, content_changed: content_changed, csrf_token: csrf_token, editor_size: editor_size, elm_packages: elm_packages, file_content: file_content, file_path: file_path, files: files, is_dir: is_dir, log: log, preview_url: preview_url, selected_package: selected_package, show_log: show_log, show_preview: show_preview, slug: slug};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var $elm_community$json_extra$Json$Decode$Extra$andMap = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $elm$json$Json$Decode$bool = _Json_decodeBool;
 var $elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
 			f(x));
 	});
 var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $author$project$App$ElmPackage = F4(
+	function (name, summary, version, license) {
+		return {license: license, name: name, summary: summary, version: version};
+	});
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$map4 = _Json_map4;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+var $author$project$App$decode_elm_package = A5(
+	$elm$json$Json$Decode$map4,
+	$author$project$App$ElmPackage,
+	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'summary', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'version', $elm$json$Json$Decode$string),
+	A2($elm$json$Json$Decode$field, 'license', $elm$json$Json$Decode$string));
 var $author$project$App$FileInfo = F3(
 	function (name, is_dir, path) {
 		return {is_dir: is_dir, name: name, path: path};
 	});
-var $elm$json$Json$Decode$bool = _Json_decodeBool;
-var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$map3 = _Json_map3;
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $author$project$App$decode_file_info = A4(
 	$elm$json$Json$Decode$map3,
 	$author$project$App$FileInfo,
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'is_dir', $elm$json$Json$Decode$bool),
 	A2($elm$json$Json$Decode$field, 'path', $elm$json$Json$Decode$string));
-var $author$project$App$init_model = {content_changed: false, csrf_token: '', editor_size: 0.5, file_content: 'The editor has not loaded successfully.', file_path: 'Oops!', files: _List_Nil, make_log: '', preview_url: '', show_preview: true, slug: 'not-a-real-thing'};
+var $author$project$App$NotLoaded = {$: 'NotLoaded'};
+var $author$project$App$init_model = {command_to_run: '', content_changed: false, csrf_token: '', editor_size: 0.5, elm_packages: _List_Nil, file_content: 'The editor has not loaded successfully.', file_path: 'Oops!', files: _List_Nil, is_dir: false, log: $author$project$App$NotLoaded, preview_url: '', selected_package: '', show_log: false, show_preview: true, slug: 'not-a-real-thing'};
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$json$Json$Decode$map6 = _Json_map6;
+var $elm$core$Debug$log = _Debug_log;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$core$Result$withDefault = F2(
 	function (def, result) {
 		if (result.$ === 'Ok') {
@@ -5386,24 +5610,47 @@ var $elm$core$Result$withDefault = F2(
 var $author$project$App$load_flags = A2(
 	$elm$core$Basics$composeR,
 	$elm$json$Json$Decode$decodeValue(
-		A7(
-			$elm$json$Json$Decode$map6,
-			F6(
-				function (preview_url, slug, files, file_path, file_content, csrf_token) {
-					return _Utils_update(
-						$author$project$App$init_model,
-						{csrf_token: csrf_token, file_content: file_content, file_path: file_path, files: files, preview_url: preview_url, slug: slug});
-				}),
-			A2($elm$json$Json$Decode$field, 'preview_url', $elm$json$Json$Decode$string),
-			A2($elm$json$Json$Decode$field, 'slug', $elm$json$Json$Decode$string),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			$elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						A2(
+						$elm$json$Json$Decode$field,
+						'elm_packages',
+						$elm$json$Json$Decode$list($author$project$App$decode_elm_package)),
+						$elm$json$Json$Decode$succeed(_List_Nil)
+					])),
 			A2(
-				$elm$json$Json$Decode$field,
-				'files',
-				$elm$json$Json$Decode$list($author$project$App$decode_file_info)),
-			A2($elm$json$Json$Decode$field, 'file_path', $elm$json$Json$Decode$string),
-			A2($elm$json$Json$Decode$field, 'file_content', $elm$json$Json$Decode$string),
-			A2($elm$json$Json$Decode$field, 'csrf_token', $elm$json$Json$Decode$string))),
-	$elm$core$Result$withDefault($author$project$App$init_model));
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2($elm$json$Json$Decode$field, 'is_dir', $elm$json$Json$Decode$bool),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'file_content', $elm$json$Json$Decode$string),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'file_path', $elm$json$Json$Decode$string),
+						A2(
+							$elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2(
+								$elm$json$Json$Decode$field,
+								'files',
+								$elm$json$Json$Decode$list($author$project$App$decode_file_info)),
+							A2(
+								$elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2($elm$json$Json$Decode$field, 'slug', $elm$json$Json$Decode$string),
+								A2(
+									$elm_community$json_extra$Json$Decode$Extra$andMap,
+									A2($elm$json$Json$Decode$field, 'preview_url', $elm$json$Json$Decode$string),
+									A2(
+										$elm_community$json_extra$Json$Decode$Extra$andMap,
+										A2($elm$json$Json$Decode$field, 'csrf_token', $elm$json$Json$Decode$string),
+										$elm$json$Json$Decode$succeed(
+											A7($author$project$App$Model, $author$project$App$init_model.show_preview, $author$project$App$init_model.show_log, $author$project$App$init_model.editor_size, $author$project$App$init_model.content_changed, $author$project$App$init_model.log, $author$project$App$init_model.command_to_run, $author$project$App$init_model.selected_package))))))))))),
+	A2(
+		$elm$core$Basics$composeR,
+		$elm$core$Result$withDefault($author$project$App$init_model),
+		$elm$core$Debug$log('model')));
 var $author$project$App$SetLog = function (a) {
 	return {$: 'SetLog', a: a};
 };
@@ -6200,13 +6447,51 @@ var $author$project$App$FileSaved = F2(
 	function (a, b) {
 		return {$: 'FileSaved', a: a, b: b};
 	});
+var $author$project$App$FileUploaded = function (a) {
+	return {$: 'FileUploaded', a: a};
+};
+var $author$project$App$HttpError = function (a) {
+	return {$: 'HttpError', a: a};
+};
+var $author$project$App$MakeError = function (a) {
+	return {$: 'MakeError', a: a};
+};
+var $author$project$App$MakeResult = F2(
+	function (a, b) {
+		return {$: 'MakeResult', a: a, b: b};
+	});
+var $author$project$App$NoOp = {$: 'NoOp'};
+var $author$project$App$ReceiveCommandResult = function (a) {
+	return {$: 'ReceiveCommandResult', a: a};
+};
 var $author$project$App$ReloadPreview = {$: 'ReloadPreview'};
 var $author$project$App$SaveContent = function (a) {
 	return {$: 'SaveContent', a: a};
 };
-var $author$project$App$SetPreviewUrl = function (a) {
-	return {$: 'SetPreviewUrl', a: a};
+var $author$project$App$SetFileContent = function (a) {
+	return {$: 'SetFileContent', a: a};
 };
+var $author$project$App$UploadFile = F2(
+	function (a, b) {
+		return {$: 'UploadFile', a: a, b: b};
+	});
+var $author$project$App$decode_command_response = $elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(
+			$elm$json$Json$Decode$map,
+			$elm$core$Result$Err,
+			A2($elm$json$Json$Decode$field, 'error', $elm$json$Json$Decode$string)),
+			A3(
+			$elm$json$Json$Decode$map2,
+			F2(
+				function (stdout, stderr) {
+					return $elm$core$Result$Ok(
+						{stderr: stderr, stdout: stdout});
+				}),
+			A2($elm$json$Json$Decode$field, 'stdout', $elm$json$Json$Decode$string),
+			A2($elm$json$Json$Decode$field, 'stderr', $elm$json$Json$Decode$string))
+		]));
 var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
@@ -6218,6 +6503,20 @@ var $author$project$App$delayMsg = F2(
 			$elm$core$Task$perform,
 			$elm$core$Basics$always(msg),
 			$elm$core$Process$sleep(delay));
+	});
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$http$Http$expectJson = F2(
+	function (toMsg, decoder) {
+		return A2(
+			$elm$http$Http$expectStringResponse,
+			toMsg,
+			$elm$http$Http$resolve(
+				function (string) {
+					return A2(
+						$elm$core$Result$mapError,
+						$elm$json$Json$Decode$errorToString,
+						A2($elm$json$Json$Decode$decodeString, decoder, string));
+				}));
 	});
 var $elm$http$Http$expectBytesResponse = F2(
 	function (toMsg, toResult) {
@@ -6236,12 +6535,69 @@ var $elm$http$Http$expectWhatever = function (toMsg) {
 				return $elm$core$Result$Ok(_Utils_Tuple0);
 			}));
 };
+var $elm$url$Url$Builder$toQueryPair = function (_v0) {
+	var key = _v0.a;
+	var value = _v0.b;
+	return key + ('=' + value);
+};
+var $elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			$elm$core$String$join,
+			'&',
+			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var $elm$url$Url$Builder$relative = F2(
+	function (pathSegments, parameters) {
+		return _Utils_ap(
+			A2($elm$core$String$join, '/', pathSegments),
+			$elm$url$Url$Builder$toQuery(parameters));
+	});
+var $elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 'QueryParameter', a: a, b: b};
+	});
+var $elm$url$Url$percentEncode = _Url_percentEncode;
+var $elm$url$Url$Builder$string = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$url$Url$percentEncode(value));
+	});
+var $author$project$App$file_edit_url = function (f) {
+	return A2(
+		$elm$url$Url$Builder$relative,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2($elm$url$Url$Builder$string, 'path', f.path)
+			]));
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$http$Http$multipartBody = function (parts) {
 	return A2(
 		_Http_pair,
 		'',
 		_Http_toFormData(parts));
 };
+var $elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
+var $elm$file$File$name = _File_name;
 var $elm$core$Basics$neq = _Utils_notEqual;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
@@ -6252,7 +6608,23 @@ var $elm$http$Http$post = function (r) {
 	return $elm$http$Http$request(
 		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $author$project$App$reload_preview = _Platform_outgoingPort(
+	'reload_preview',
+	function ($) {
+		return $elm$json$Json$Encode$null;
+	});
+var $author$project$App$set_log = F2(
+	function (log, model) {
+		return _Utils_update(
+			model,
+			{
+				log: log,
+				show_log: A2($elm$core$Debug$log, 'show log', true)
+			});
+	});
 var $elm$http$Http$stringPart = _Http_pair;
+var $elm$file$File$toString = _File_toString;
 var $author$project$App$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -6279,23 +6651,45 @@ var $author$project$App$update = F2(
 										A2($elm$http$Http$stringPart, 'content', model.file_content),
 										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
 									])),
-							expect: $elm$http$Http$expectWhatever(
-								$author$project$App$FileSaved(content)),
+							expect: A2(
+								$elm$http$Http$expectJson,
+								$author$project$App$FileSaved(content),
+								$author$project$App$decode_command_response),
 							url: 'save-file'
 						})) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'FileSaved':
 				var content = msg.a;
 				var response = msg.b;
 				if (response.$ === 'Ok') {
-					return _Utils_Tuple2(
+					if (response.a.$ === 'Ok') {
+						var res = response.a.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									content_changed: !_Utils_eq(content, model.file_content),
+									log: A2($author$project$App$MakeResult, res.stdout, res.stderr)
+								}),
+							A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
+					} else {
+						var errmsg = response.a.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									content_changed: !_Utils_eq(content, model.file_content),
+									log: $author$project$App$MakeError(errmsg)
+								}),
+							A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
+					}
+				} else {
+					var err = response.a;
+					return $author$project$App$nocmd(
 						_Utils_update(
 							model,
 							{
-								content_changed: !_Utils_eq(content, model.file_content)
-							}),
-						A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
-				} else {
-					return $author$project$App$nocmd(model);
+								log: $author$project$App$HttpError(err)
+							}));
 				}
 			case 'ReloadLog':
 				return _Utils_Tuple2(model, $author$project$App$reload_log);
@@ -6306,45 +6700,159 @@ var $author$project$App$update = F2(
 					return $author$project$App$nocmd(
 						_Utils_update(
 							model,
-							{make_log: log}));
+							{
+								log: A2($author$project$App$MakeResult, log, '')
+							}));
 				} else {
-					return $author$project$App$nocmd(model);
+					var errmsg = response.a;
+					return $author$project$App$nocmd(
+						A2(
+							$author$project$App$set_log,
+							$author$project$App$HttpError(errmsg),
+							model));
 				}
 			case 'ReloadPreview':
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{preview_url: ''}),
-					A2(
-						$author$project$App$delayMsg,
-						100,
-						$author$project$App$SetPreviewUrl(model.preview_url)));
-			case 'SetPreviewUrl':
-				var url = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
-						model,
-						{preview_url: url}));
+					model,
+					$author$project$App$reload_preview(_Utils_Tuple0));
 			case 'SetEditorSize':
 				var size = msg.a;
 				return $author$project$App$nocmd(
 					_Utils_update(
 						model,
 						{editor_size: size}));
-			default:
+			case 'TogglePreview':
 				var show = msg.a;
 				return $author$project$App$nocmd(
 					_Utils_update(
 						model,
 						{show_preview: show}));
+			case 'ToggleLog':
+				var show = msg.a;
+				return $author$project$App$nocmd(
+					_Utils_update(
+						model,
+						{
+							show_log: A2($elm$core$Debug$log, 'toggle', show)
+						}));
+			case 'DropFiles':
+				var action = msg.a;
+				var files = msg.b;
+				var _v3 = $elm$core$List$head(files);
+				if (_v3.$ === 'Just') {
+					var file = _v3.a;
+					if (action.$ === 'Content') {
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$core$Task$perform,
+								$author$project$App$SetFileContent,
+								$elm$file$File$toString(file)));
+					} else {
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$core$Task$perform,
+								$author$project$App$UploadFile(file),
+								$elm$file$File$toString(file)));
+					}
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'UploadFile':
+				var file = msg.a;
+				var contents = msg.b;
+				return _Utils_Tuple2(
+					model,
+					$elm$http$Http$post(
+						{
+							body: $elm$http$Http$multipartBody(
+								_List_fromArray(
+									[
+										A2(
+										$elm$http$Http$stringPart,
+										'path',
+										$elm$file$File$name(file)),
+										A2($elm$http$Http$stringPart, 'content', contents),
+										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+									])),
+							expect: $elm$http$Http$expectWhatever(
+								function (r) {
+									var _v5 = A2($elm$core$Debug$log, 'uploaded file', r);
+									if (_v5.$ === 'Ok') {
+										return $author$project$App$FileUploaded(file);
+									} else {
+										return $author$project$App$NoOp;
+									}
+								}),
+							url: 'save-file'
+						}));
+			case 'FileUploaded':
+				var file = msg.a;
+				var name = $elm$file$File$name(file);
+				var url = $author$project$App$file_edit_url(
+					{is_dir: false, name: name, path: name});
+				return _Utils_Tuple2(
+					model,
+					$elm$browser$Browser$Navigation$load(url));
+			case 'SetCommand':
+				var cmd = msg.a;
+				return $author$project$App$nocmd(
+					_Utils_update(
+						model,
+						{command_to_run: cmd}));
+			case 'RunCommand':
+				var cmd = msg.a;
+				return _Utils_Tuple2(
+					model,
+					$elm$http$Http$post(
+						{
+							body: $elm$http$Http$multipartBody(
+								_List_fromArray(
+									[
+										A2($elm$http$Http$stringPart, 'command', cmd),
+										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+									])),
+							expect: A2($elm$http$Http$expectJson, $author$project$App$ReceiveCommandResult, $author$project$App$decode_command_response),
+							url: 'run-command'
+						}));
+			case 'SelectPackage':
+				var name = msg.a;
+				return $author$project$App$nocmd(
+					_Utils_update(
+						model,
+						{selected_package: name}));
+			case 'ReceiveCommandResult':
+				var response = msg.a;
+				if (response.$ === 'Ok') {
+					if (response.a.$ === 'Ok') {
+						var res = response.a.a;
+						return $author$project$App$nocmd(
+							A2(
+								$author$project$App$set_log,
+								A2($author$project$App$MakeResult, res.stdout, res.stderr),
+								model));
+					} else {
+						var errmsg = response.a.a;
+						return $author$project$App$nocmd(
+							A2(
+								$author$project$App$set_log,
+								$author$project$App$MakeError(errmsg),
+								model));
+					}
+				} else {
+					var err = response.a;
+					return $author$project$App$nocmd(
+						A2(
+							$author$project$App$set_log,
+							$author$project$App$HttpError(err),
+							model));
+				}
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
-var $elm$core$Basics$round = _Basics_round;
-var $author$project$App$as_percentage = function (amount) {
-	return $elm$core$String$fromInt(
-		$elm$core$Basics$round(100 * amount)) + '%';
-};
 var $elm$virtual_dom$VirtualDom$attribute = F2(
 	function (key, value) {
 		return A2(
@@ -6362,20 +6870,6 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
-var $author$project$App$SetFileContent = function (a) {
-	return {$: 'SetFileContent', a: a};
-};
-var $elm$html$Html$Attributes$action = function (uri) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'action',
-		_VirtualDom_noJavaScriptUri(uri));
-};
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -6401,6 +6895,23 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $author$project$App$Content = {$: 'Content'};
+var $author$project$App$DropFiles = F2(
+	function (a, b) {
+		return {$: 'DropFiles', a: a, b: b};
+	});
+var $elm$html$Html$Attributes$action = function (uri) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'action',
+		_VirtualDom_noJavaScriptUri(uri));
+};
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$file$File$decoder = _File_decoder;
 var $elm$html$Html$details = _VirtualDom_node('details');
 var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$input = _VirtualDom_node('input');
@@ -6446,6 +6957,16 @@ var $elm$html$Html$Events$on = F2(
 			event,
 			$elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
+var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 'MayPreventDefault', a: a};
+};
+var $elm$html$Html$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
 var $elm$html$Html$section = _VirtualDom_node('section');
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$summary = _VirtualDom_node('summary');
@@ -6456,7 +6977,27 @@ var $author$project$App$editor_pane = function (model) {
 		$elm$html$Html$section,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$id('editor')
+				$elm$html$Html$Attributes$id('editor'),
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'drop',
+				A2(
+					$elm$json$Json$Decode$map,
+					function (f) {
+						return _Utils_Tuple2(
+							A2($author$project$App$DropFiles, $author$project$App$Content, f),
+							true);
+					},
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['dataTransfer', 'files']),
+						$elm$json$Json$Decode$list($elm$file$File$decoder)))),
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'dragover',
+				$elm$json$Json$Decode$succeed(
+					_Utils_Tuple2($author$project$App$NoOp, true)))
 			]),
 		_List_fromArray(
 			[
@@ -6604,7 +7145,8 @@ var $author$project$App$editor_pane = function (model) {
 										$elm$json$Json$Decode$at,
 										_List_fromArray(
 											['target', 'value']),
-										$elm$json$Json$Decode$string)))
+										$elm$json$Json$Decode$string))),
+								A2($elm$html$Html$Attributes$attribute, 'content', model.file_content)
 							]),
 						_List_fromArray(
 							[
@@ -6631,23 +7173,28 @@ var $author$project$App$editor_pane = function (model) {
 					]))
 			]));
 };
+var $elm$core$String$fromFloat = _String_fromNumber;
 var $author$project$App$SetEditorSize = function (a) {
 	return {$: 'SetEditorSize', a: a};
+};
+var $elm$html$Html$a = _VirtualDom_node('a');
+var $elm$core$Basics$round = _Basics_round;
+var $author$project$App$as_percentage = function (amount) {
+	return $elm$core$String$fromInt(
+		$elm$core$Basics$round(100 * amount)) + '%';
 };
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
-var $elm$core$String$fromFloat = _String_fromNumber;
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$header = _VirtualDom_node('header');
-var $elm$html$Html$label = _VirtualDom_node('label');
-var $elm$html$Html$a = _VirtualDom_node('a');
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
+var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$App$link = F2(
 	function (url, text) {
 		return A2(
@@ -6670,6 +7217,7 @@ var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$Attributes$step = function (n) {
 	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
 };
+var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $author$project$App$header = function (model) {
 	return A2(
 		$elm$html$Html$header,
@@ -6692,9 +7240,20 @@ var $author$project$App$header = function (model) {
 					]),
 				_List_fromArray(
 					[
+						A2(
+						$elm$html$Html$a,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$target('preview'),
+								$elm$html$Html$Attributes$href(model.preview_url)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Preview')
+							])),
 						A2($author$project$App$link, 'rename', 'Rename'),
 						A2($author$project$App$link, 'delete', 'Delete'),
-						A2($author$project$App$link, 'remix', 'Remix'),
+						A2($author$project$App$link, '/new/' + model.slug, 'Remix'),
 						A2(
 						$elm$html$Html$label,
 						_List_fromArray(
@@ -6760,21 +7319,38 @@ var $author$project$App$header = function (model) {
 					]))
 			]));
 };
-var $author$project$App$ReloadLog = {$: 'ReloadLog'};
-var $elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		$elm$html$Html$Events$on,
-		'click',
-		$elm$json$Json$Decode$succeed(msg));
+var $author$project$App$ToggleLog = function (a) {
+	return {$: 'ToggleLog', a: a};
 };
+var $elm$html$Html$dd = _VirtualDom_node('dd');
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$dl = _VirtualDom_node('dl');
+var $elm$html$Html$dt = _VirtualDom_node('dt');
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
 var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$App$log_pane = function (model) {
 	return A2(
 		$elm$html$Html$details,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$id('log')
-			]),
+		_Utils_ap(
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('log'),
+					A2(
+					$elm$html$Html$Events$on,
+					'toggle',
+					A2(
+						$elm$json$Json$Decode$map,
+						$author$project$App$ToggleLog,
+						A2(
+							$elm$json$Json$Decode$at,
+							_List_fromArray(
+								['target', 'open']),
+							$elm$json$Json$Decode$bool)))
+				]),
+			model.show_log ? _List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$attribute, 'open', '')
+				]) : _List_Nil),
 		_List_fromArray(
 			[
 				A2(
@@ -6784,64 +7360,258 @@ var $author$project$App$log_pane = function (model) {
 					[
 						$elm$html$Html$text('Log')
 					])),
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$App$ReloadLog),
-						$elm$html$Html$Attributes$type_('button')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Reload')
-					])),
-				A2(
-				$elm$html$Html$pre,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text(model.make_log)
-					]))
+				function () {
+				var _v0 = model.log;
+				switch (_v0.$) {
+					case 'NotLoaded':
+						return $elm$html$Html$text('Not loaded');
+					case 'MakeResult':
+						var stdout = _v0.a;
+						var stderr = _v0.b;
+						return A2(
+							$elm$html$Html$dl,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$dt,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('stdout')
+										])),
+									A2(
+									$elm$html$Html$dd,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$pre,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text(stdout)
+												]))
+										])),
+									A2(
+									$elm$html$Html$dt,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('stderr')
+										])),
+									A2(
+									$elm$html$Html$dd,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$pre,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text(stderr)
+												]))
+										]))
+								]));
+					case 'CommandResult':
+						var stdout = _v0.a;
+						var stderr = _v0.b;
+						return A2(
+							$elm$html$Html$dl,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$dt,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('stdout')
+										])),
+									A2(
+									$elm$html$Html$dd,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$pre,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text(stdout)
+												]))
+										])),
+									A2(
+									$elm$html$Html$dt,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('stderr')
+										])),
+									A2(
+									$elm$html$Html$dd,
+									_List_Nil,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$pre,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$elm$html$Html$text(stderr)
+												]))
+										]))
+								]));
+					case 'MakeError':
+						var err = _v0.a;
+						return A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h2,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Error')
+										])),
+									A2(
+									$elm$html$Html$pre,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(err)
+										]))
+								]));
+					default:
+						var err = _v0.a;
+						var text = function () {
+							switch (err.$) {
+								case 'BadUrl':
+									var url = err.a;
+									return 'Bad URL ' + url;
+								case 'Timeout':
+									return 'Timeout';
+								case 'NetworkError':
+									return 'Network error';
+								case 'BadStatus':
+									var code = err.a;
+									return 'Bad response code ' + $elm$core$String$fromInt(code);
+								default:
+									var body = err.a;
+									return 'Bad body ' + body;
+							}
+						}();
+						return A2(
+							$elm$html$Html$div,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$h2,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text('Network error')
+										])),
+									A2(
+									$elm$html$Html$pre,
+									_List_Nil,
+									_List_fromArray(
+										[
+											$elm$html$Html$text(text)
+										]))
+								]));
+				}
+			}()
 			]));
 };
 var $elm$html$Html$main_ = _VirtualDom_node('main');
-var $elm$html$Html$Attributes$enctype = $elm$html$Html$Attributes$stringProperty('enctype');
+var $author$project$App$RunCommand = function (a) {
+	return {$: 'RunCommand', a: a};
+};
+var $author$project$App$SelectPackage = function (a) {
+	return {$: 'SelectPackage', a: a};
+};
+var $author$project$App$SetCommand = function (a) {
+	return {$: 'SetCommand', a: a};
+};
+var $author$project$App$Upload = {$: 'Upload'};
+var $elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$core$Basics$not = _Basics_not;
-var $elm$url$Url$Builder$toQueryPair = function (_v0) {
-	var key = _v0.a;
-	var value = _v0.b;
-	return key + ('=' + value);
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
 };
-var $elm$url$Url$Builder$toQuery = function (parameters) {
-	if (!parameters.b) {
-		return '';
-	} else {
-		return '?' + A2(
-			$elm$core$String$join,
-			'&',
-			A2($elm$core$List$map, $elm$url$Url$Builder$toQueryPair, parameters));
-	}
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
 };
-var $elm$url$Url$Builder$relative = F2(
-	function (pathSegments, parameters) {
-		return _Utils_ap(
-			A2($elm$core$String$join, '/', pathSegments),
-			$elm$url$Url$Builder$toQuery(parameters));
-	});
-var $elm$url$Url$Builder$QueryParameter = F2(
-	function (a, b) {
-		return {$: 'QueryParameter', a: a, b: b};
-	});
-var $elm$url$Url$percentEncode = _Url_percentEncode;
-var $elm$url$Url$Builder$string = F2(
-	function (key, value) {
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
 		return A2(
-			$elm$url$Url$Builder$QueryParameter,
-			$elm$url$Url$percentEncode(key),
-			$elm$url$Url$percentEncode(value));
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
 	});
-var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var $elm$html$Html$Events$onSubmit = function (msg) {
+	return A2(
+		$elm$html$Html$Events$preventDefaultOn,
+		'submit',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysPreventDefault,
+			$elm$json$Json$Decode$succeed(msg)));
+};
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$String$right = F2(
+	function (n, string) {
+		return (n < 1) ? '' : A3(
+			$elm$core$String$slice,
+			-n,
+			$elm$core$String$length(string),
+			string);
+	});
 var $elm$html$Html$ul = _VirtualDom_node('ul');
 var $author$project$App$main_nav = function (model) {
 	return A2(
@@ -6849,7 +7619,27 @@ var $author$project$App$main_nav = function (model) {
 		_List_fromArray(
 			[
 				A2($elm$html$Html$Attributes$attribute, 'open', ''),
-				$elm$html$Html$Attributes$id('main-nav')
+				$elm$html$Html$Attributes$id('main-nav'),
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'drop',
+				A2(
+					$elm$json$Json$Decode$map,
+					function (f) {
+						return _Utils_Tuple2(
+							A2($author$project$App$DropFiles, $author$project$App$Upload, f),
+							true);
+					},
+					A2(
+						$elm$json$Json$Decode$at,
+						_List_fromArray(
+							['dataTransfer', 'files']),
+						$elm$json$Json$Decode$list($elm$file$File$decoder)))),
+				A2(
+				$elm$html$Html$Events$preventDefaultOn,
+				'dragover',
+				$elm$json$Json$Decode$succeed(
+					_Utils_Tuple2($author$project$App$NoOp, true)))
 			]),
 		_List_fromArray(
 			[
@@ -6865,17 +7655,6 @@ var $author$project$App$main_nav = function (model) {
 				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$a,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$target('preview'),
-								$elm$html$Html$Attributes$href(model.preview_url)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Preview')
-							])),
 						A2(
 						$elm$html$Html$ul,
 						_List_fromArray(
@@ -6901,13 +7680,7 @@ var $author$project$App$main_nav = function (model) {
 										[
 											A2(
 											$author$project$App$link,
-											A2(
-												$elm$url$Url$Builder$relative,
-												_List_Nil,
-												_List_fromArray(
-													[
-														A2($elm$url$Url$Builder$string, 'path', f.path)
-													])),
+											$author$project$App$file_edit_url(f),
 											f.name)
 										]));
 							},
@@ -6918,9 +7691,8 @@ var $author$project$App$main_nav = function (model) {
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$id('file-form'),
-								$elm$html$Html$Attributes$method('POST'),
-								$elm$html$Html$Attributes$action('save-file'),
-								$elm$html$Html$Attributes$enctype('multipart/form-data')
+								$elm$html$Html$Attributes$method('GET'),
+								$elm$html$Html$Attributes$action('edit')
 							]),
 						_List_fromArray(
 							[
@@ -6931,7 +7703,17 @@ var $author$project$App$main_nav = function (model) {
 										A2($elm$html$Html$Attributes$attribute, 'aria-labelledby', 'new-file-button'),
 										$elm$html$Html$Attributes$id('new-file-path'),
 										$elm$html$Html$Attributes$type_('text'),
-										$elm$html$Html$Attributes$name('path')
+										$elm$html$Html$Attributes$name('path'),
+										$elm$html$Html$Attributes$value(
+										(model.is_dir ? model.file_path : A2(
+											$elm$core$String$join,
+											'/',
+											$elm$core$List$reverse(
+												A2(
+													$elm$core$List$drop,
+													1,
+													$elm$core$List$reverse(
+														A2($elm$core$String$split, '/', model.file_path)))))) + '/')
 									]),
 								_List_Nil),
 								A2(
@@ -6951,8 +7733,8 @@ var $author$project$App$main_nav = function (model) {
 						model,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$method('POST'),
-								$elm$html$Html$Attributes$action('run-command')
+								$elm$html$Html$Events$onSubmit(
+								$author$project$App$RunCommand(model.command_to_run))
 							]),
 						_List_fromArray(
 							[
@@ -6961,7 +7743,9 @@ var $author$project$App$main_nav = function (model) {
 								_List_fromArray(
 									[
 										A2($elm$html$Html$Attributes$attribute, 'aria-labelledby', 'run-command-button'),
-										$elm$html$Html$Attributes$name('command')
+										$elm$html$Html$Events$onInput($author$project$App$SetCommand),
+										$elm$html$Html$Attributes$name('command'),
+										$elm$html$Html$Attributes$value(model.command_to_run)
 									]),
 								_List_Nil),
 								A2(
@@ -6975,7 +7759,68 @@ var $author$project$App$main_nav = function (model) {
 									[
 										$elm$html$Html$text('Run')
 									]))
-							]))
+							])),
+						(A2($elm$core$String$right, 4, model.file_path) === '.elm') ? A3(
+						$author$project$App$form,
+						model,
+						_List_fromArray(
+							[
+								$elm$html$Html$Events$onSubmit(
+								function () {
+									var _v0 = model.selected_package;
+									if (_v0 === '') {
+										return $author$project$App$NoOp;
+									} else {
+										var p = _v0;
+										return $author$project$App$RunCommand('bash -c \"echo \'Y\' | elm install ' + (p + '\"'));
+									}
+								}())
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$list('elm-packages'),
+										$elm$html$Html$Events$onInput($author$project$App$SelectPackage),
+										$elm$html$Html$Attributes$value(model.selected_package)
+									]),
+								_List_Nil),
+								A3(
+								$elm$html$Html$node,
+								'datalist',
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('elm-packages')
+									]),
+								A2(
+									$elm$core$List$map,
+									function (p) {
+										return A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value(p.name)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(p.name)
+												]));
+									},
+									model.elm_packages)),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('install-package-button'),
+										$elm$html$Html$Attributes$type_('submit')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Install')
+									]))
+							])) : $elm$html$Html$text('')
 					]))
 			]));
 };
@@ -7022,18 +7867,6 @@ var $author$project$App$preview_pane = function (model) {
 			model.show_preview ? _List_fromArray(
 				[
 					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Events$onClick($author$project$App$ReloadPreview),
-							$elm$html$Html$Attributes$id('reload-preview'),
-							$elm$html$Html$Attributes$type_('button')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Reload')
-						])),
-					A2(
 					$elm$html$Html$iframe,
 					_List_fromArray(
 						[
@@ -7052,17 +7885,21 @@ var $author$project$App$view = function (model) {
 				$elm$html$Html$main_,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('think-editor'),
+						$elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('think-editor', true)
+							])),
 						A2(
 						$elm$html$Html$Attributes$attribute,
 						'style',
-						'--editor-size: ' + $author$project$App$as_percentage(model.editor_size))
+						'--editor-size: ' + ($elm$core$String$fromFloat(model.editor_size) + ('fr' + (';--preview-size: ' + ($elm$core$String$fromFloat(1 - model.editor_size) + 'fr')))))
 					]),
 				_List_fromArray(
 					[
 						$author$project$App$main_nav(model),
 						$author$project$App$log_pane(model),
-						$author$project$App$editor_pane(model),
+						model.is_dir ? $elm$html$Html$text('') : $author$project$App$editor_pane(model),
 						$author$project$App$preview_pane(model)
 					]))
 			]),

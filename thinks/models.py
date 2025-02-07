@@ -10,6 +10,7 @@ class Think(models.Model):
 
     slug = models.SlugField()
     category = models.CharField(max_length=100, blank=True, null=True)
+    creation_time = models.DateTimeField(auto_now_add=True)
 
     is_template = models.BooleanField(default=False)
 
@@ -58,6 +59,11 @@ class Think(models.Model):
 
         return log
 
-    @property
-    def creation_time(self):
-        return make_aware(datetime.fromtimestamp(self.root.stat().st_ctime))
+    def as_json(self):
+        return {
+            'slug': self.slug,
+            'category': self.category,
+            'absolute_url': self.get_absolute_url(),
+            'readme': self.get_readme(),
+            'creation_time': self.creation_time,
+        }
