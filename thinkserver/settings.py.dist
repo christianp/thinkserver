@@ -131,3 +131,5 @@ THINKS_DIR.mkdir(parents=True, exist_ok=True)
 THINKS_STATIC_URL = 'https://{slug}.think.somethingorotherwhatever.com'
 
 API_TOKEN = ''
+
+GIT_REPO_URL_TEMPLATE = ''

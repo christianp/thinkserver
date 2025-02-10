@@ -127,3 +127,10 @@ class RunCommandForm(forms.ModelForm):
     class Meta:
         model = Think
         fields = []
+
+class GitCommitForm(forms.ModelForm):
+    message = forms.CharField()
+
+    class Meta:
+        model = Think
+        fields = []

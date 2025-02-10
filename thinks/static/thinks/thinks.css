@@ -2,6 +2,14 @@
     --spacing: 1em;
     --half-spacing: calc(0.5 * var(--spacing));
     --double-spacing: calc(2 * var(--spacing));
+
+    --background: hsl(70,100%,95%);
+    --color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+    --background: hsl(70,100%,8%);
+    --color: white;
 }
 
 * {
@@ -9,6 +17,11 @@
 }
 
 body {
+    color-scheme: light dark;
+
+    background: var(--background);
+    color: var(--color);
+
     font-family: sans-serif;
     & > header {
         padding: var(--spacing);
@@ -26,22 +39,22 @@ body.login {
     height: 100svh;
     margin: 0;
     padding: var(--spacing);
-    
+
     & header {
         text-align: center;
     }
-    
+
     & form {
         display: grid;
         gap: var(--spacing);
-        
+
         & div {
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-auto-flow: row;
             gap: var(--spacing);
             align-items: center;
-            
+
             & label {
                 grid-column: 1;
                 justify-self: end;
@@ -51,7 +64,7 @@ body.login {
                 grid-column: 2;
             }
         }
-        
+
         grid-template-rows: 2em 2em 2em;
     }
 }
@@ -76,7 +89,7 @@ body.index {
             gap: var(--double-spacing);
             list-style: none;
             padding: 0;
-            
+
             & details {
                 &[open] > summary {
                     margin-bottom: var(--spacing);
@@ -92,10 +105,24 @@ body.index {
                 & time {
                     font-size: smaller;
                 }
-                
+
                 & .readme {
                     max-width: 80ch;
                     white-space: pre-wrap;
+                }
+
+                & .jj {
+                    writing-mode: vertical-lr;
+                    vertical-align: middle;
+                    font-size: 0.5em;
+                    color: white;
+                    background: black;
+                    padding: 0.2em;
+                    border-radius: 0.5em;
+
+                    &.has {
+                        font-weight: bold;
+                    }
                 }
             }
         }
@@ -240,3 +267,4 @@ body.thing-editor {
         }
     }
 }
+

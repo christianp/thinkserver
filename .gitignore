@@ -5,3 +5,4 @@ public/
 secret_key.txt
 think_data/
 Makefile
+thinkserver/settings.py

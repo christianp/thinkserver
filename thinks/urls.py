@@ -13,6 +13,8 @@ urlpatterns = [
     path('think/<slug:slug>/delete-file', DeleteFileView.as_view(), name='delete_file'),
     path('think/<slug:slug>/run-command', RunCommandView.as_view(), name='run_command'),
     path('think/<slug:slug>/log', LogView.as_view(), name='log'),
+    path('think/<slug:slug>/jj/status', JJStatusView.as_view(), name='jj_status'),
+    path('think/<slug:slug>/jj/commit', JJCommitView.as_view(), name='jj_commit'),
     path('new', CreateThinkView.as_view(), name='new_think'),
     path('new/<slug:slug>', RemixThinkView.as_view(), name='remix_think'),
 ]

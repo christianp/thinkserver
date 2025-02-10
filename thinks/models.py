@@ -3,6 +3,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils.timezone import datetime, make_aware
 
+from .jujutsu import JJController
+
 THINKS_DIR = settings.THINKS_DIR
 
 # Create your models here.
@@ -20,6 +22,13 @@ class Think(models.Model):
     @property
     def root(self):
         return (THINKS_DIR / self.slug).resolve()
+
+    @property
+    def jj_controller(self):
+        return JJController(self)
+
+    def has_jj(self):
+        return (self.root / '.jj').exists()
 
     def get_absolute_url(self):
         return reverse('think', kwargs={'slug': self.slug})

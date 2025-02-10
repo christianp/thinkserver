@@ -223,3 +223,22 @@ class LogView(ThinkMixin, generic.DetailView):
         think = self.get_object()
 
         return HttpResponse(think.get_log(), content_type='text/plain; charset=utf-8')
+
+class JJStatusView(ThinkMixin, generic.detail.DetailView):
+    def get(self, request, *args, **kwargs):
+        status = self.get_object().jj_controller.status()
+        return JsonResponse({'status': status})
+
+class JJCommitView(ThinkMixin, generic.UpdateView):
+    form_class = forms.GitCommitForm
+
+    def form_valid(self, form):
+        message = form.cleaned_data['message']
+
+        think = form.instance
+
+        jj = think.jj_controller
+
+        res = jj.commit(message)
+
+        return JsonResponse({'ok': res.returncode == 0, 'think': think.pk, 'stdout': res.stdout, 'stderr': res.stderr})

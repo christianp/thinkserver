@@ -1,0 +1,10 @@
+<li class="think">
+    <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
+    <time datetime="{{think.creation_time|date:"c"}}">{{think.creation_time}}</time>
+    <small class="jj {% if think.has_jj %}has{% endif %}">备份{% if think.has_jj %}✔{% else %}✗{% endif %}</small>
+    {% with readme=think.get_readme %}
+    {% if readme %}
+    <pre class="readme">{{readme|safe}}</pre>
+    {% endif %}
+    {% endwith %}
+</li>

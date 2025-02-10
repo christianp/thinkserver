@@ -5536,15 +5536,19 @@ var $author$project$App$Model = function (show_preview) {
 				return function (log) {
 					return function (command_to_run) {
 						return function (selected_package) {
-							return function (csrf_token) {
-								return function (preview_url) {
-									return function (slug) {
-										return function (files) {
-											return function (file_path) {
-												return function (file_content) {
-													return function (is_dir) {
-														return function (elm_packages) {
-															return {command_to_run: command_to_run, content_changed: content_changed, csrf_token: csrf_token, editor_size: editor_size, elm_packages: elm_packages, file_content: file_content, file_path: file_path, files: files, is_dir: is_dir, log: log, preview_url: preview_url, selected_package: selected_package, show_log: show_log, show_preview: show_preview, slug: slug};
+							return function (jj_status) {
+								return function (commit_message) {
+									return function (csrf_token) {
+										return function (preview_url) {
+											return function (slug) {
+												return function (files) {
+													return function (file_path) {
+														return function (file_content) {
+															return function (is_dir) {
+																return function (elm_packages) {
+																	return {command_to_run: command_to_run, commit_message: commit_message, content_changed: content_changed, csrf_token: csrf_token, editor_size: editor_size, elm_packages: elm_packages, file_content: file_content, file_path: file_path, files: files, is_dir: is_dir, jj_status: jj_status, log: log, preview_url: preview_url, selected_package: selected_package, show_log: show_log, show_preview: show_preview, slug: slug};
+																};
+															};
 														};
 													};
 												};
@@ -5594,9 +5598,8 @@ var $author$project$App$decode_file_info = A4(
 	A2($elm$json$Json$Decode$field, 'is_dir', $elm$json$Json$Decode$bool),
 	A2($elm$json$Json$Decode$field, 'path', $elm$json$Json$Decode$string));
 var $author$project$App$NotLoaded = {$: 'NotLoaded'};
-var $author$project$App$init_model = {command_to_run: '', content_changed: false, csrf_token: '', editor_size: 0.5, elm_packages: _List_Nil, file_content: 'The editor has not loaded successfully.', file_path: 'Oops!', files: _List_Nil, is_dir: false, log: $author$project$App$NotLoaded, preview_url: '', selected_package: '', show_log: false, show_preview: true, slug: 'not-a-real-thing'};
+var $author$project$App$init_model = {command_to_run: '', commit_message: '', content_changed: false, csrf_token: '', editor_size: 0.5, elm_packages: _List_Nil, file_content: 'The editor has not loaded successfully.', file_path: 'Oops!', files: _List_Nil, is_dir: false, jj_status: '', log: $author$project$App$NotLoaded, preview_url: '', selected_package: '', show_log: false, show_preview: true, slug: 'not-a-real-thing'};
 var $elm$json$Json$Decode$list = _Json_decodeList;
-var $elm$core$Debug$log = _Debug_log;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $elm$core$Result$withDefault = F2(
 	function (def, result) {
@@ -5646,11 +5649,8 @@ var $author$project$App$load_flags = A2(
 										$elm_community$json_extra$Json$Decode$Extra$andMap,
 										A2($elm$json$Json$Decode$field, 'csrf_token', $elm$json$Json$Decode$string),
 										$elm$json$Json$Decode$succeed(
-											A7($author$project$App$Model, $author$project$App$init_model.show_preview, $author$project$App$init_model.show_log, $author$project$App$init_model.editor_size, $author$project$App$init_model.content_changed, $author$project$App$init_model.log, $author$project$App$init_model.command_to_run, $author$project$App$init_model.selected_package))))))))))),
-	A2(
-		$elm$core$Basics$composeR,
-		$elm$core$Result$withDefault($author$project$App$init_model),
-		$elm$core$Debug$log('model')));
+											A9($author$project$App$Model, $author$project$App$init_model.show_preview, $author$project$App$init_model.show_log, $author$project$App$init_model.editor_size, $author$project$App$init_model.content_changed, $author$project$App$init_model.log, $author$project$App$init_model.command_to_run, $author$project$App$init_model.selected_package, $author$project$App$init_model.jj_status, $author$project$App$init_model.commit_message))))))))))),
+	$elm$core$Result$withDefault($author$project$App$init_model));
 var $author$project$App$SetLog = function (a) {
 	return {$: 'SetLog', a: a};
 };
@@ -6453,6 +6453,9 @@ var $author$project$App$FileUploaded = function (a) {
 var $author$project$App$HttpError = function (a) {
 	return {$: 'HttpError', a: a};
 };
+var $author$project$App$JJCommitResponse = function (a) {
+	return {$: 'JJCommitResponse', a: a};
+};
 var $author$project$App$MakeError = function (a) {
 	return {$: 'MakeError', a: a};
 };
@@ -6465,6 +6468,9 @@ var $author$project$App$ReceiveCommandResult = function (a) {
 	return {$: 'ReceiveCommandResult', a: a};
 };
 var $author$project$App$ReloadPreview = {$: 'ReloadPreview'};
+var $author$project$App$RunCommand = function (a) {
+	return {$: 'RunCommand', a: a};
+};
 var $author$project$App$SaveContent = function (a) {
 	return {$: 'SaveContent', a: a};
 };
@@ -6475,6 +6481,7 @@ var $author$project$App$UploadFile = F2(
 	function (a, b) {
 		return {$: 'UploadFile', a: a, b: b};
 	});
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $author$project$App$decode_command_response = $elm$json$Json$Decode$oneOf(
 	_List_fromArray(
 		[
@@ -6535,6 +6542,24 @@ var $elm$http$Http$expectWhatever = function (toMsg) {
 				return $elm$core$Result$Ok(_Utils_Tuple0);
 			}));
 };
+var $author$project$App$ReceiveJJStatus = function (a) {
+	return {$: 'ReceiveJJStatus', a: a};
+};
+var $author$project$App$fetch_jj_status = $elm$http$Http$get(
+	{
+		expect: A2(
+			$elm$http$Http$expectJson,
+			function (r) {
+				if (r.$ === 'Ok') {
+					var response = r.a;
+					return $author$project$App$ReceiveJJStatus(response);
+				} else {
+					return $author$project$App$NoOp;
+				}
+			},
+			A2($elm$json$Json$Decode$field, 'status', $elm$json$Json$Decode$string)),
+		url: 'jj/status'
+	});
 var $elm$url$Url$Builder$toQueryPair = function (_v0) {
 	var key = _v0.a;
 	var value = _v0.b;
@@ -6599,7 +6624,6 @@ var $elm$time$Time$Posix = function (a) {
 var $elm$time$Time$millisToPosix = $elm$time$Time$Posix;
 var $elm$file$File$name = _File_name;
 var $elm$core$Basics$neq = _Utils_notEqual;
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$App$nocmd = function (model) {
 	return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
@@ -6618,238 +6642,307 @@ var $author$project$App$set_log = F2(
 	function (log, model) {
 		return _Utils_update(
 			model,
-			{
-				log: log,
-				show_log: A2($elm$core$Debug$log, 'show log', true)
-			});
+			{log: log, show_log: true});
 	});
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $author$project$App$show_modal = _Platform_outgoingPort('show_modal', $elm$json$Json$Encode$string);
 var $elm$http$Http$stringPart = _Http_pair;
 var $elm$file$File$toString = _File_toString;
 var $author$project$App$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'SetFileContent':
-				var content = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{content_changed: true, file_content: content}),
-					A2(
-						$author$project$App$delayMsg,
-						1000,
-						$author$project$App$SaveContent(content)));
-			case 'SaveContent':
-				var content = msg.a;
-				return _Utils_eq(content, model.file_content) ? _Utils_Tuple2(
-					model,
-					$elm$http$Http$post(
-						{
-							body: $elm$http$Http$multipartBody(
-								_List_fromArray(
-									[
-										A2($elm$http$Http$stringPart, 'path', model.file_path),
-										A2($elm$http$Http$stringPart, 'content', model.file_content),
-										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
-									])),
-							expect: A2(
-								$elm$http$Http$expectJson,
-								$author$project$App$FileSaved(content),
-								$author$project$App$decode_command_response),
-							url: 'save-file'
-						})) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			case 'FileSaved':
-				var content = msg.a;
-				var response = msg.b;
-				if (response.$ === 'Ok') {
-					if (response.a.$ === 'Ok') {
-						var res = response.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									content_changed: !_Utils_eq(content, model.file_content),
-									log: A2($author$project$App$MakeResult, res.stdout, res.stderr)
-								}),
-							A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
-					} else {
-						var errmsg = response.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									content_changed: !_Utils_eq(content, model.file_content),
-									log: $author$project$App$MakeError(errmsg)
-								}),
-							A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
-					}
-				} else {
-					var err = response.a;
-					return $author$project$App$nocmd(
+		update:
+		while (true) {
+			switch (msg.$) {
+				case 'SetFileContent':
+					var content = msg.a;
+					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{
-								log: $author$project$App$HttpError(err)
-							}));
-				}
-			case 'ReloadLog':
-				return _Utils_Tuple2(model, $author$project$App$reload_log);
-			case 'SetLog':
-				var response = msg.a;
-				if (response.$ === 'Ok') {
-					var log = response.a;
-					return $author$project$App$nocmd(
-						_Utils_update(
-							model,
-							{
-								log: A2($author$project$App$MakeResult, log, '')
-							}));
-				} else {
-					var errmsg = response.a;
-					return $author$project$App$nocmd(
+							{content_changed: true, file_content: content}),
 						A2(
-							$author$project$App$set_log,
-							$author$project$App$HttpError(errmsg),
-							model));
-				}
-			case 'ReloadPreview':
-				return _Utils_Tuple2(
-					model,
-					$author$project$App$reload_preview(_Utils_Tuple0));
-			case 'SetEditorSize':
-				var size = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
+							$author$project$App$delayMsg,
+							1000,
+							$author$project$App$SaveContent(content)));
+				case 'SaveContent':
+					var content = msg.a;
+					return _Utils_eq(content, model.file_content) ? _Utils_Tuple2(
 						model,
-						{editor_size: size}));
-			case 'TogglePreview':
-				var show = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
-						model,
-						{show_preview: show}));
-			case 'ToggleLog':
-				var show = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
-						model,
-						{
-							show_log: A2($elm$core$Debug$log, 'toggle', show)
-						}));
-			case 'DropFiles':
-				var action = msg.a;
-				var files = msg.b;
-				var _v3 = $elm$core$List$head(files);
-				if (_v3.$ === 'Just') {
-					var file = _v3.a;
-					if (action.$ === 'Content') {
-						return _Utils_Tuple2(
-							model,
-							A2(
-								$elm$core$Task$perform,
-								$author$project$App$SetFileContent,
-								$elm$file$File$toString(file)));
+						$elm$http$Http$post(
+							{
+								body: $elm$http$Http$multipartBody(
+									_List_fromArray(
+										[
+											A2($elm$http$Http$stringPart, 'path', model.file_path),
+											A2($elm$http$Http$stringPart, 'content', model.file_content),
+											A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+										])),
+								expect: A2(
+									$elm$http$Http$expectJson,
+									$author$project$App$FileSaved(content),
+									$author$project$App$decode_command_response),
+								url: 'save-file'
+							})) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				case 'FileSaved':
+					var content = msg.a;
+					var response = msg.b;
+					if (response.$ === 'Ok') {
+						if (response.a.$ === 'Ok') {
+							var res = response.a.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										content_changed: !_Utils_eq(content, model.file_content),
+										log: A2($author$project$App$MakeResult, res.stdout, res.stderr)
+									}),
+								A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
+						} else {
+							var errmsg = response.a.a;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										content_changed: !_Utils_eq(content, model.file_content),
+										log: $author$project$App$MakeError(errmsg)
+									}),
+								A2($author$project$App$delayMsg, 1, $author$project$App$ReloadPreview));
+						}
 					} else {
-						return _Utils_Tuple2(
-							model,
-							A2(
-								$elm$core$Task$perform,
-								$author$project$App$UploadFile(file),
-								$elm$file$File$toString(file)));
+						var err = response.a;
+						return $author$project$App$nocmd(
+							_Utils_update(
+								model,
+								{
+									log: $author$project$App$HttpError(err)
+								}));
 					}
-				} else {
+				case 'ReloadLog':
+					return _Utils_Tuple2(model, $author$project$App$reload_log);
+				case 'SetLog':
+					var response = msg.a;
+					if (response.$ === 'Ok') {
+						var log = response.a;
+						return $author$project$App$nocmd(
+							_Utils_update(
+								model,
+								{
+									log: A2($author$project$App$MakeResult, log, '')
+								}));
+					} else {
+						var errmsg = response.a;
+						return $author$project$App$nocmd(
+							A2(
+								$author$project$App$set_log,
+								$author$project$App$HttpError(errmsg),
+								model));
+					}
+				case 'ReloadPreview':
+					return _Utils_Tuple2(
+						model,
+						$author$project$App$reload_preview(_Utils_Tuple0));
+				case 'SetEditorSize':
+					var size = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{editor_size: size}));
+				case 'TogglePreview':
+					var show = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{show_preview: show}));
+				case 'ToggleLog':
+					var show = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{show_log: show}));
+				case 'DropFiles':
+					var action = msg.a;
+					var files = msg.b;
+					var _v3 = $elm$core$List$head(files);
+					if (_v3.$ === 'Just') {
+						var file = _v3.a;
+						if (action.$ === 'Content') {
+							return _Utils_Tuple2(
+								model,
+								A2(
+									$elm$core$Task$perform,
+									$author$project$App$SetFileContent,
+									$elm$file$File$toString(file)));
+						} else {
+							return _Utils_Tuple2(
+								model,
+								A2(
+									$elm$core$Task$perform,
+									$author$project$App$UploadFile(file),
+									$elm$file$File$toString(file)));
+						}
+					} else {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					}
+				case 'UploadFile':
+					var file = msg.a;
+					var contents = msg.b;
+					return _Utils_Tuple2(
+						model,
+						$elm$http$Http$post(
+							{
+								body: $elm$http$Http$multipartBody(
+									_List_fromArray(
+										[
+											A2(
+											$elm$http$Http$stringPart,
+											'path',
+											$elm$file$File$name(file)),
+											A2($elm$http$Http$stringPart, 'content', contents),
+											A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+										])),
+								expect: $elm$http$Http$expectWhatever(
+									function (r) {
+										if (r.$ === 'Ok') {
+											return $author$project$App$FileUploaded(file);
+										} else {
+											return $author$project$App$NoOp;
+										}
+									}),
+								url: 'save-file'
+							}));
+				case 'FileUploaded':
+					var file = msg.a;
+					var name = $elm$file$File$name(file);
+					var url = $author$project$App$file_edit_url(
+						{is_dir: false, name: name, path: name});
+					return _Utils_Tuple2(
+						model,
+						$elm$browser$Browser$Navigation$load(url));
+				case 'SetCommand':
+					var cmd = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{command_to_run: cmd}));
+				case 'RunCommand':
+					var cmd = msg.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$http$Http$post(
+							{
+								body: $elm$http$Http$multipartBody(
+									_List_fromArray(
+										[
+											A2($elm$http$Http$stringPart, 'command', cmd),
+											A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+										])),
+								expect: A2($elm$http$Http$expectJson, $author$project$App$ReceiveCommandResult, $author$project$App$decode_command_response),
+								url: 'run-command'
+							}));
+				case 'SelectPackage':
+					var name = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{selected_package: name}));
+				case 'ReceiveCommandResult':
+					var response = msg.a;
+					if (response.$ === 'Ok') {
+						if (response.a.$ === 'Ok') {
+							var res = response.a.a;
+							return $author$project$App$nocmd(
+								A2(
+									$author$project$App$set_log,
+									A2($author$project$App$MakeResult, res.stdout, res.stderr),
+									model));
+						} else {
+							var errmsg = response.a.a;
+							return $author$project$App$nocmd(
+								A2(
+									$author$project$App$set_log,
+									$author$project$App$MakeError(errmsg),
+									model));
+						}
+					} else {
+						var err = response.a;
+						return $author$project$App$nocmd(
+							A2(
+								$author$project$App$set_log,
+								$author$project$App$HttpError(err),
+								model));
+					}
+				case 'ShowCommitModal':
+					return _Utils_Tuple2(
+						model,
+						$elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[
+									$author$project$App$fetch_jj_status,
+									$author$project$App$show_modal('commit-modal')
+								])));
+				case 'SetCommitMessage':
+					var message = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{commit_message: message}));
+				case 'ReceiveJJStatus':
+					var status = msg.a;
+					return $author$project$App$nocmd(
+						_Utils_update(
+							model,
+							{commit_message: '', jj_status: status}));
+				case 'JJCommit':
+					return _Utils_Tuple2(
+						model,
+						$elm$http$Http$post(
+							{
+								body: $elm$http$Http$multipartBody(
+									_List_fromArray(
+										[
+											A2($elm$http$Http$stringPart, 'message', model.commit_message),
+											A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
+										])),
+								expect: A2($elm$http$Http$expectJson, $author$project$App$JJCommitResponse, $author$project$App$decode_command_response),
+								url: 'jj/commit'
+							}));
+				case 'JJCommitResponse':
+					var response = msg.a;
+					if (response.$ === 'Ok') {
+						if (response.a.$ === 'Ok') {
+							var res = response.a.a;
+							return $author$project$App$nocmd(
+								_Utils_update(
+									model,
+									{
+										log: A2($author$project$App$MakeResult, res.stdout, res.stderr)
+									}));
+						} else {
+							var errmsg = response.a.a;
+							return $author$project$App$nocmd(
+								_Utils_update(
+									model,
+									{
+										log: $author$project$App$MakeError(errmsg)
+									}));
+						}
+					} else {
+						var err = response.a;
+						return $author$project$App$nocmd(
+							_Utils_update(
+								model,
+								{
+									log: $author$project$App$HttpError(err)
+								}));
+					}
+				case 'JJPush':
+					var $temp$msg = $author$project$App$RunCommand('jj bookmark set main -r @- && jj git push -b main --allow-new'),
+						$temp$model = model;
+					msg = $temp$msg;
+					model = $temp$model;
+					continue update;
+				default:
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-			case 'UploadFile':
-				var file = msg.a;
-				var contents = msg.b;
-				return _Utils_Tuple2(
-					model,
-					$elm$http$Http$post(
-						{
-							body: $elm$http$Http$multipartBody(
-								_List_fromArray(
-									[
-										A2(
-										$elm$http$Http$stringPart,
-										'path',
-										$elm$file$File$name(file)),
-										A2($elm$http$Http$stringPart, 'content', contents),
-										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
-									])),
-							expect: $elm$http$Http$expectWhatever(
-								function (r) {
-									var _v5 = A2($elm$core$Debug$log, 'uploaded file', r);
-									if (_v5.$ === 'Ok') {
-										return $author$project$App$FileUploaded(file);
-									} else {
-										return $author$project$App$NoOp;
-									}
-								}),
-							url: 'save-file'
-						}));
-			case 'FileUploaded':
-				var file = msg.a;
-				var name = $elm$file$File$name(file);
-				var url = $author$project$App$file_edit_url(
-					{is_dir: false, name: name, path: name});
-				return _Utils_Tuple2(
-					model,
-					$elm$browser$Browser$Navigation$load(url));
-			case 'SetCommand':
-				var cmd = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
-						model,
-						{command_to_run: cmd}));
-			case 'RunCommand':
-				var cmd = msg.a;
-				return _Utils_Tuple2(
-					model,
-					$elm$http$Http$post(
-						{
-							body: $elm$http$Http$multipartBody(
-								_List_fromArray(
-									[
-										A2($elm$http$Http$stringPart, 'command', cmd),
-										A2($elm$http$Http$stringPart, 'csrfmiddlewaretoken', model.csrf_token)
-									])),
-							expect: A2($elm$http$Http$expectJson, $author$project$App$ReceiveCommandResult, $author$project$App$decode_command_response),
-							url: 'run-command'
-						}));
-			case 'SelectPackage':
-				var name = msg.a;
-				return $author$project$App$nocmd(
-					_Utils_update(
-						model,
-						{selected_package: name}));
-			case 'ReceiveCommandResult':
-				var response = msg.a;
-				if (response.$ === 'Ok') {
-					if (response.a.$ === 'Ok') {
-						var res = response.a.a;
-						return $author$project$App$nocmd(
-							A2(
-								$author$project$App$set_log,
-								A2($author$project$App$MakeResult, res.stdout, res.stderr),
-								model));
-					} else {
-						var errmsg = response.a.a;
-						return $author$project$App$nocmd(
-							A2(
-								$author$project$App$set_log,
-								$author$project$App$MakeError(errmsg),
-								model));
-					}
-				} else {
-					var err = response.a;
-					return $author$project$App$nocmd(
-						A2(
-							$author$project$App$set_log,
-							$author$project$App$HttpError(err),
-							model));
-				}
-			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			}
 		}
 	});
 var $elm$json$Json$Decode$value = _Json_decodeValue;
@@ -6861,7 +6954,6 @@ var $elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -6895,6 +6987,191 @@ var $elm$html$Html$Attributes$classList = function (classes) {
 				$elm$core$Tuple$first,
 				A2($elm$core$List$filter, $elm$core$Tuple$second, classes))));
 };
+var $author$project$App$JJCommit = {$: 'JJCommit'};
+var $author$project$App$SetCommitMessage = function (a) {
+	return {$: 'SetCommitMessage', a: a};
+};
+var $elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
+	});
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
+var $elm$html$Html$form = _VirtualDom_node('form');
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$label = _VirtualDom_node('label');
+var $elm$html$Html$Attributes$method = $elm$html$Html$Attributes$stringProperty('method');
+var $elm$virtual_dom$VirtualDom$node = function (tag) {
+	return _VirtualDom_node(
+		_VirtualDom_noScript(tag));
+};
+var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
+var $elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var $elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var $elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var $elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$virtual_dom$VirtualDom$on,
+			event,
+			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var $elm$html$Html$Events$targetValue = A2(
+	$elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	$elm$json$Json$Decode$string);
+var $elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		$elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			$elm$json$Json$Decode$map,
+			$elm$html$Html$Events$alwaysStop,
+			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+};
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $elm$html$Html$pre = _VirtualDom_node('pre');
+var $elm$html$Html$td = _VirtualDom_node('td');
+var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$textarea = _VirtualDom_node('textarea');
+var $elm$html$Html$tr = _VirtualDom_node('tr');
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
+var $author$project$App$commit_modal = function (model) {
+	var view_status = function (status) {
+		return A2(
+			$elm$html$Html$tr,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$td,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(status.path)
+						]))
+				]));
+	};
+	return A3(
+		$elm$html$Html$node,
+		'dialog',
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('commit-modal')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h2,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Commit')
+					])),
+				A2(
+				$elm$html$Html$pre,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('jj-status')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(model.jj_status)
+					])),
+				A2(
+				$elm$html$Html$form,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$Events$on,
+						'submit',
+						A2(
+							$elm$json$Json$Decode$map,
+							function (v) {
+								if (v === 'cancel') {
+									return $author$project$App$NoOp;
+								} else {
+									return $author$project$App$JJCommit;
+								}
+							},
+							A2(
+								$elm$json$Json$Decode$at,
+								_List_fromArray(
+									['submitter', 'value']),
+								$elm$json$Json$Decode$string))),
+						$elm$html$Html$Attributes$method('dialog')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$label,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$for('commit-message')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Commit message')
+							])),
+						A2(
+						$elm$html$Html$textarea,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$value(model.commit_message),
+								$elm$html$Html$Events$onInput($author$project$App$SetCommitMessage)
+							]),
+						_List_Nil),
+						A2(
+						$elm$html$Html$p,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('modal-controls')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$value('cancel'),
+										A2($elm$html$Html$Attributes$attribute, 'formmethod', 'dialog')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Cancel')
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('submit')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Commit')
+									]))
+							]))
+					]))
+			]));
+};
 var $author$project$App$Content = {$: 'Content'};
 var $author$project$App$DropFiles = F2(
 	function (a, b) {
@@ -6906,18 +7183,10 @@ var $elm$html$Html$Attributes$action = function (uri) {
 		'action',
 		_VirtualDom_noJavaScriptUri(uri));
 };
-var $elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3($elm$core$List$foldr, $elm$json$Json$Decode$field, decoder, fields);
-	});
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$file$File$decoder = _File_decoder;
 var $elm$html$Html$details = _VirtualDom_node('details');
-var $elm$html$Html$form = _VirtualDom_node('form');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Attributes$name = $elm$html$Html$Attributes$stringProperty('name');
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
 var $author$project$App$form = F3(
 	function (model, attrs, children) {
 		return A2(
@@ -6938,25 +7207,7 @@ var $author$project$App$form = F3(
 						_List_Nil)
 					])));
 	});
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$html$Html$Attributes$method = $elm$html$Html$Attributes$stringProperty('method');
 var $elm$html$Html$nav = _VirtualDom_node('nav');
-var $elm$virtual_dom$VirtualDom$node = function (tag) {
-	return _VirtualDom_node(
-		_VirtualDom_noScript(tag));
-};
-var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
-var $elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var $elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var $elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
 var $elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
 	return {$: 'MayPreventDefault', a: a};
 };
@@ -6970,8 +7221,6 @@ var $elm$html$Html$Events$preventDefaultOn = F2(
 var $elm$html$Html$section = _VirtualDom_node('section');
 var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$html$Html$summary = _VirtualDom_node('summary');
-var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
 var $author$project$App$editor_pane = function (model) {
 	return A2(
 		$elm$html$Html$section,
@@ -7185,7 +7434,6 @@ var $author$project$App$as_percentage = function (amount) {
 };
 var $elm$html$Html$datalist = _VirtualDom_node('datalist');
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $elm$html$Html$Attributes$for = $elm$html$Html$Attributes$stringProperty('htmlFor');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$html$Html$header = _VirtualDom_node('header');
 var $elm$html$Html$Attributes$href = function (url) {
@@ -7194,7 +7442,6 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $elm$html$Html$label = _VirtualDom_node('label');
 var $author$project$App$link = F2(
 	function (url, text) {
 		return A2(
@@ -7213,7 +7460,6 @@ var $elm$html$Html$Attributes$max = $elm$html$Html$Attributes$stringProperty('ma
 var $elm$html$Html$Attributes$min = $elm$html$Html$Attributes$stringProperty('min');
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$output = _VirtualDom_node('output');
-var $elm$html$Html$p = _VirtualDom_node('p');
 var $elm$html$Html$Attributes$step = function (n) {
 	return A2($elm$html$Html$Attributes$stringProperty, 'step', n);
 };
@@ -7224,7 +7470,7 @@ var $author$project$App$header = function (model) {
 		_List_Nil,
 		_List_fromArray(
 			[
-				A2($author$project$App$link, '/', 'thinks'),
+				A2($author$project$App$link, '/', '← thinks'),
 				A2(
 				$elm$html$Html$h1,
 				_List_Nil,
@@ -7255,50 +7501,60 @@ var $author$project$App$header = function (model) {
 						A2($author$project$App$link, 'delete', 'Delete'),
 						A2($author$project$App$link, '/new/' + model.slug, 'Remix'),
 						A2(
-						$elm$html$Html$label,
+						$elm$html$Html$span,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$for('editor-size-input')
+								$elm$html$Html$Attributes$class('field'),
+								$elm$html$Html$Attributes$id('editor-size')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('File editor size')
-							])),
-						A2(
-						$elm$html$Html$input,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('range'),
-								$elm$html$Html$Attributes$id('editor-size-input'),
-								$elm$html$Html$Attributes$min('0'),
-								$elm$html$Html$Attributes$max('1'),
-								$elm$html$Html$Attributes$step('0.05'),
-								$elm$html$Html$Attributes$value(
-								$elm$core$String$fromFloat(model.editor_size)),
 								A2(
-								$elm$html$Html$Events$on,
-								'input',
+								$elm$html$Html$label,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$for('editor-size-input')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('File editor size')
+									])),
 								A2(
-									$elm$json$Json$Decode$map,
-									$author$project$App$SetEditorSize,
-									A2(
-										$elm$json$Json$Decode$at,
-										_List_fromArray(
-											['target', 'valueAsNumber']),
-										$elm$json$Json$Decode$float))),
-								$elm$html$Html$Attributes$list('size-values')
-							]),
-						_List_Nil),
-						A2(
-						$elm$html$Html$output,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$for('editor-size-input')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$author$project$App$as_percentage(model.editor_size))
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('range'),
+										$elm$html$Html$Attributes$id('editor-size-input'),
+										$elm$html$Html$Attributes$min('0'),
+										$elm$html$Html$Attributes$max('1'),
+										$elm$html$Html$Attributes$step('0.05'),
+										$elm$html$Html$Attributes$value(
+										$elm$core$String$fromFloat(model.editor_size)),
+										A2(
+										$elm$html$Html$Events$on,
+										'input',
+										A2(
+											$elm$json$Json$Decode$map,
+											$author$project$App$SetEditorSize,
+											A2(
+												$elm$json$Json$Decode$at,
+												_List_fromArray(
+													['target', 'valueAsNumber']),
+												$elm$json$Json$Decode$float))),
+										$elm$html$Html$Attributes$list('size-values')
+									]),
+								_List_Nil),
+								A2(
+								$elm$html$Html$output,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$for('editor-size-input')
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										$author$project$App$as_percentage(model.editor_size))
+									]))
 							])),
 						A2(
 						$elm$html$Html$datalist,
@@ -7326,8 +7582,6 @@ var $elm$html$Html$dd = _VirtualDom_node('dd');
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$dl = _VirtualDom_node('dl');
 var $elm$html$Html$dt = _VirtualDom_node('dt');
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
-var $elm$html$Html$pre = _VirtualDom_node('pre');
 var $author$project$App$log_pane = function (model) {
 	return A2(
 		$elm$html$Html$details,
@@ -7529,15 +7783,14 @@ var $author$project$App$log_pane = function (model) {
 			]));
 };
 var $elm$html$Html$main_ = _VirtualDom_node('main');
-var $author$project$App$RunCommand = function (a) {
-	return {$: 'RunCommand', a: a};
-};
+var $author$project$App$JJPush = {$: 'JJPush'};
 var $author$project$App$SelectPackage = function (a) {
 	return {$: 'SelectPackage', a: a};
 };
 var $author$project$App$SetCommand = function (a) {
 	return {$: 'SetCommand', a: a};
 };
+var $author$project$App$ShowCommitModal = {$: 'ShowCommitModal'};
 var $author$project$App$Upload = {$: 'Upload'};
 var $elm$core$List$drop = F2(
 	function (n, list) {
@@ -7562,32 +7815,11 @@ var $elm$core$List$drop = F2(
 	});
 var $elm$html$Html$li = _VirtualDom_node('li');
 var $elm$core$Basics$not = _Basics_not;
-var $elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var $elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var $elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			$elm$virtual_dom$VirtualDom$on,
-			event,
-			$elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var $elm$html$Html$Events$targetValue = A2(
-	$elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	$elm$json$Json$Decode$string);
-var $elm$html$Html$Events$onInput = function (tagger) {
+var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
-		$elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			$elm$json$Json$Decode$map,
-			$elm$html$Html$Events$alwaysStop,
-			A2($elm$json$Json$Decode$map, tagger, $elm$html$Html$Events$targetValue)));
+		$elm$html$Html$Events$on,
+		'click',
+		$elm$json$Json$Decode$succeed(msg));
 };
 var $elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
@@ -7820,7 +8052,40 @@ var $author$project$App$main_nav = function (model) {
 									[
 										$elm$html$Html$text('Install')
 									]))
-							])) : $elm$html$Html$text('')
+							])) : $elm$html$Html$text(''),
+						A2(
+						$elm$html$Html$p,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('jj-buttons')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('start-commit-button'),
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Events$onClick($author$project$App$ShowCommitModal)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Commit')
+									])),
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$id('jj-push-button'),
+										$elm$html$Html$Attributes$type_('button'),
+										$elm$html$Html$Events$onClick($author$project$App$JJPush)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Push')
+									]))
+							]))
 					]))
 			]));
 };
@@ -7901,7 +8166,8 @@ var $author$project$App$view = function (model) {
 						$author$project$App$log_pane(model),
 						model.is_dir ? $elm$html$Html$text('') : $author$project$App$editor_pane(model),
 						$author$project$App$preview_pane(model)
-					]))
+					])),
+				$author$project$App$commit_modal(model)
 			]),
 		title: model.file_path + (' - ' + (model.slug + ' - Thinks'))
 	};

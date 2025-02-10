@@ -25,15 +25,7 @@
 
         <ul class="thinks-list">
             {% for think in recent_thinks %}
-            <li class="think">
-                <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
-                <time datetime="{{think.creation_time|date:"c"}}">{{think.creation_time}}</time>
-                {% with readme=think.get_readme %}
-                {% if readme %}
-                <pre class="readme">{{readme|safe}}</pre>
-                {% endif %}
-                {% endwith %}
-            </li>
+                {% include "thinks/think_list_item.html" %}
             {% endfor %}
         </ul>
     </section>
@@ -45,19 +37,11 @@
             <ul class="thinks-list">
                 {% for category in categories %}
                 <li>
-                <details open>
+                <details>
                     <summary>{% if category.grouper %}{{category.grouper}}{% else %}Uncategorised{% endif %}</summary>
                         <ul>
                         {% for think in category.list %}
-                        <li class="think">
-                            <a href="{% url 'think' think.slug %}">{{think.slug}}</a>
-                            <time datetime="{{think.creation_time|date:"c"}}">{{think.creation_time}}</time>
-                            {% with readme=think.get_readme %}
-                            {% if readme %}
-                            <pre class="readme">{{readme|safe}}</pre>
-                            {% endif %}
-                            {% endwith %}
-                        </li>
+                            {% include "thinks/think_list_item.html" %}
                         {% endfor %}
                         </ul>
                 </details>
